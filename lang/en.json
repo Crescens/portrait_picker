@@ -25,7 +25,8 @@
       "Mode": {
         "Label": "Tokens on this scene",
         "Token": "Token (normal size)",
-        "Portrait": "Portrait ({scale}× image)"
+        "Portrait": "Portrait ({scale}× image)",
+        "NoTokens": "(No linked token on this scene; only the portrait and prototype token will change.)"
       }
     },
     "Errors": {

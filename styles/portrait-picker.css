@@ -134,6 +134,13 @@
   gap: 0.25rem;
 }
 
+/* Small grey note shown when there are no tokens on the scene to change. */
+.portrait-picker .portrait-picker-hint {
+  font-size: 0.8rem;
+  font-style: italic;
+  opacity: 0.75;
+}
+
 /* ---------- Bottom buttons ---------- */
 
 .portrait-picker .portrait-picker-buttons {

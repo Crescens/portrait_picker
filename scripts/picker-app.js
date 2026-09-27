@@ -17,7 +17,7 @@
 
 import { MODULE_ID } from "./constants.js";
 import { browseFolder, findStartingFolder, parentFolder, displayName, samePath } from "./folders.js";
-import { applyImageToActor, applyImageToSceneTokens, getCurrentMode, MODE_PORTRAIT } from "./image-updater.js";
+import { applyImageToActor, applyImageToSceneTokens, getCurrentMode, findLinkedTokensOnViewedScene, MODE_PORTRAIT } from "./image-updater.js";
 import * as log from "./logger.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
@@ -132,6 +132,9 @@ export class PortraitPickerApp extends HandlebarsApplicationMixin(ApplicationV2)
     context.isEmpty = context.folders.length === 0 && context.images.length === 0;
     context.hasSelection = this.selectedPath !== null;
     context.isPortrait = this.mode === MODE_PORTRAIT;
+    // If this actor has no linked token on the scene being viewed, the
+    // Token/Portrait choice won't change anything, so the template says so.
+    context.hasSceneTokens = findLinkedTokensOnViewedScene(this.actor).length > 0;
     // e.g. "Portrait (6× image)", using the GM's current scale setting.
     context.portraitLabel = game.i18n.format("PORTRAIT_PICKER.Picker.Mode.Portrait", {
       scale: game.settings.get(MODULE_ID, "portraitScale")
@@ -280,7 +283,6 @@ export async function openPortraitPicker(actor) {
 
   actorsBeingOpened.add(actor.id);
   try {
-
     // Without the "Use File Browser" permission the server refuses to list
     // folders, so say so clearly instead of showing an empty window.
     if (!game.user.can("FILES_BROWSE")) {
