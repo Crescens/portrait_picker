@@ -17,10 +17,20 @@
     <input type="search" class="portrait-picker-filter"
            placeholder="{{localize "PORTRAIT_PICKER.Picker.Filter"}}"
            aria-label="{{localize "PORTRAIT_PICKER.Picker.Filter"}}">
+    {{#if canUpload}}
+    <button type="button" class="portrait-picker-upload" data-action="upload"
+            data-tooltip="{{localize "PORTRAIT_PICKER.Picker.UploadHint"}}">
+      <i class="fa-solid fa-upload"></i> {{localize "PORTRAIT_PICKER.Picker.Upload"}}
+    </button>
+    {{!-- Hidden; the Upload button opens it. --}}
+    <input type="file" class="portrait-picker-file-input" hidden multiple
+           accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+    {{/if}}
   </header>
 
   {{!-- Grid of folders first, then images --}}
-  <section class="portrait-picker-grid">
+  {{!-- tabindex="0" lets the grid hold the keyboard focus, so Ctrl+V pastes here. --}}
+  <section class="portrait-picker-grid" tabindex="0">
     {{#each folders}}
     <button type="button" class="portrait-picker-tile folder" data-action="openFolder"
             data-path="{{path}}" data-search-name="{{searchName}}">
@@ -30,10 +40,10 @@
     {{/each}}
 
     {{#each images}}
-    <button type="button"
+    <button type="button" draggable="false"
             class="portrait-picker-tile image {{#if isCurrent}}current{{/if}} {{#if isSelected}}selected{{/if}}"
             data-action="selectImage" data-path="{{path}}" data-search-name="{{searchName}}">
-      <img src="{{path}}" alt="{{name}}" loading="lazy">
+      <img src="{{path}}" alt="{{name}}" loading="lazy" draggable="false">
       <span class="portrait-picker-name">{{name}}</span>
       {{#if isCurrent}}
       <span class="portrait-picker-badge">{{localize "PORTRAIT_PICKER.Picker.Current"}}</span>
@@ -45,6 +55,10 @@
     <p class="portrait-picker-empty">{{localize "PORTRAIT_PICKER.Picker.Empty"}}</p>
     {{/if}}
   </section>
+
+  {{#if canUpload}}
+  <p class="portrait-picker-hint portrait-picker-drop-hint">{{localize "PORTRAIT_PICKER.Picker.DropHint"}}</p>
+  {{/if}}
 
   {{!-- Token / Portrait choice. Only affects tokens on the scene you're viewing. --}}
   <fieldset class="portrait-picker-mode">

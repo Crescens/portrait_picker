@@ -13,11 +13,14 @@
  * Changing folder re-reads the folder and redraws the window.
  *
  * Confirm hands the chosen image to image-updater.js, which saves it.
+ * New images can be added by dragging files onto the window, the Upload
+ * button, or pasting (Ctrl+V); uploader.js does the uploading.
  */
 
 import { MODULE_ID } from "./constants.js";
 import { browseFolder, findStartingFolder, parentFolder, displayName, samePath } from "./folders.js";
 import { applyImageToActor, applyImageToSceneTokens, getCurrentMode, findLinkedTokensOnViewedScene, MODE_PORTRAIT } from "./image-updater.js";
+import { canUpload, uploadImages } from "./uploader.js";
 import * as log from "./logger.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
@@ -61,6 +64,7 @@ export class PortraitPickerApp extends HandlebarsApplicationMixin(ApplicationV2)
       openFolder: PortraitPickerApp.onOpenFolder,
       goUp: PortraitPickerApp.onGoUp,
       selectImage: PortraitPickerApp.onSelectImage,
+      upload: PortraitPickerApp.onUploadButton,
       confirm: PortraitPickerApp.onConfirm,
       cancel: PortraitPickerApp.onCancel
     }
@@ -131,6 +135,7 @@ export class PortraitPickerApp extends HandlebarsApplicationMixin(ApplicationV2)
 
     context.isEmpty = context.folders.length === 0 && context.images.length === 0;
     context.hasSelection = this.selectedPath !== null;
+    context.canUpload = canUpload();
     context.isPortrait = this.mode === MODE_PORTRAIT;
     // If this actor has no linked token on the scene being viewed, the
     // Token/Portrait choice won't change anything, so the template says so.
@@ -156,6 +161,8 @@ export class PortraitPickerApp extends HandlebarsApplicationMixin(ApplicationV2)
       });
     }
 
+    this.activateUploads();
+
     // Remember the chosen mode on the window, so it survives moving between
     // folders (which redraws the window).
     const modeInputs = this.element.querySelectorAll('input[name="portrait-picker-mode"]');
@@ -166,6 +173,97 @@ export class PortraitPickerApp extends HandlebarsApplicationMixin(ApplicationV2)
           log.debug(`Mode set to "${this.mode}".`);
         }
       });
+    }
+  }
+
+  /**
+   * Set up the three ways to add images: drag-and-drop, the hidden file
+   * chooser behind the Upload button, and paste.
+   * The listeners go on the window's contents (".portrait-picker-body"),
+   * which is rebuilt on every redraw, so they never pile up.
+   */
+  activateUploads() {
+    const body = this.element.querySelector(".portrait-picker-body");
+    const grid = this.element.querySelector(".portrait-picker-grid");
+    if (!body || !grid) {
+      return;
+    }
+
+    // Drag-and-drop. "dragover" must call preventDefault() or the browser
+    // won't allow a drop (it would open the image in a new tab instead).
+    body.addEventListener("dragover", (event) => {
+      if (event.dataTransfer && event.dataTransfer.types.includes("Files")) {
+        event.preventDefault();
+        grid.classList.add("drag-over");
+      }
+    });
+    body.addEventListener("dragleave", (event) => {
+      // Only clear the highlight when the pointer really leaves the window
+      // contents, not when it moves between tiles inside it.
+      if (!body.contains(event.relatedTarget)) {
+        grid.classList.remove("drag-over");
+      }
+    });
+    body.addEventListener("drop", (event) => {
+      grid.classList.remove("drag-over");
+      const files = event.dataTransfer ? event.dataTransfer.files : null;
+      if (!files || files.length === 0) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      this.handleNewFiles(Array.from(files));
+    });
+
+    // The Upload button opens this hidden file chooser (see onUploadButton).
+    const fileInput = this.element.querySelector(".portrait-picker-file-input");
+    if (fileInput) {
+      fileInput.addEventListener("change", () => {
+        const files = Array.from(fileInput.files);
+        fileInput.value = "";
+        if (files.length > 0) {
+          this.handleNewFiles(files);
+        }
+      });
+    }
+
+    // Paste (Ctrl+V). Only images are handled; pasting text (for example
+    // into the filter box) works as normal.
+    body.addEventListener("paste", (event) => {
+      const files = event.clipboardData ? Array.from(event.clipboardData.files) : [];
+      if (files.length === 0) {
+        return;
+      }
+      // Stop here, so nothing else in Foundry (like the canvas) also reacts
+      // to this paste.
+      event.preventDefault();
+      event.stopPropagation();
+      this.handleNewFiles(files);
+    });
+
+    // Put the keyboard focus on the grid, so Ctrl+V works straight away
+    // without clicking into the window first.
+    grid.focus({ preventScroll: true });
+  }
+
+  /**
+   * Upload files into the folder being shown, then show the folder again
+   * with the last uploaded image selected, ready for Confirm.
+   * @param {File[]} files
+   */
+  async handleNewFiles(files) {
+    // Ignore new files while an upload is still running.
+    if (this.uploading) {
+      return;
+    }
+    this.uploading = true;
+    try {
+      const uploaded = await uploadImages(files, this.folder, this.files);
+      if (uploaded.length > 0) {
+        await this.goToFolder(this.folder, uploaded[uploaded.length - 1]);
+      }
+    } finally {
+      this.uploading = false;
     }
   }
 
@@ -188,14 +286,23 @@ export class PortraitPickerApp extends HandlebarsApplicationMixin(ApplicationV2)
    * Read a folder and redraw the window with it. If the folder can't be read,
    * warn the user and stay where we are.
    * @param {string} folder
+   * @param {string|null} selectPath   optional: select this image (used after an upload)
    */
-  async goToFolder(folder) {
+  async goToFolder(folder, selectPath = null) {
     const contents = await browseFolder(folder);
     if (!contents) {
       ui.notifications.warn(game.i18n.format("PORTRAIT_PICKER.Warnings.FolderUnreadable", { folder: folder }));
       return;
     }
     this.showFolder(contents);
+
+    if (selectPath) {
+      for (const file of this.files) {
+        if (samePath(file, selectPath)) {
+          this.selectedPath = file;
+        }
+      }
+    }
     await this.render();
   }
 
@@ -229,6 +336,14 @@ export class PortraitPickerApp extends HandlebarsApplicationMixin(ApplicationV2)
       confirmButton.disabled = false;
     }
     log.debug(`Selected "${this.selectedPath}".`);
+  }
+
+  /** The Upload button: open the computer's file chooser. */
+  static onUploadButton(event, target) {
+    const fileInput = this.element.querySelector(".portrait-picker-file-input");
+    if (fileInput) {
+      fileInput.click();
+    }
   }
 
   /**

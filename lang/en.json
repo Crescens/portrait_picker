@@ -27,12 +27,17 @@
         "Token": "Token (normal size)",
         "Portrait": "Portrait ({scale}× image)",
         "NoTokens": "(No linked token on this scene; only the portrait and prototype token will change.)"
-      }
+      },
+      "Upload": "Upload",
+      "UploadHint": "Upload images from your computer into this folder",
+      "DropHint": "Drag images here from your computer, click Upload, or paste an image with Ctrl+V.",
+      "Uploaded": "Portrait Picker: uploaded {count} image(s)."
     },
     "Errors": {
       "OpenFailed": "Portrait Picker could not open. Press F12 and check the Console for details.",
       "NoFolder": "Portrait Picker: couldn't open any image folder, not even \"assets\". Check that Data/assets exists on the server.",
-      "ActorUpdateFailed": "Portrait Picker: couldn't save the new image for \"{name}\". Press F12 and check the Console for details."
+      "ActorUpdateFailed": "Portrait Picker: couldn't save the new image for \"{name}\". Press F12 and check the Console for details.",
+      "UploadFailed": "Portrait Picker: couldn't upload \"{name}\". It may be too large for your server. Press F12 and check the Console for details."
     },
     "Warnings": {
       "FolderMissing": "Portrait Picker: couldn't open the folder \"{missing}\", so it's showing \"{shown}\" instead. Check the folder exists and its name matches exactly (including capital letters).",
@@ -40,7 +45,10 @@
       "NoBrowsePermission": "Portrait Picker: you don't have the \"Use File Browser\" permission. Ask your GM to enable it.",
       "NoActorPermission": "Portrait Picker: you don't have permission to change \"{name}\".",
       "NoTokenPermission": "Portrait Picker: you don't have permission to change the token \"{name}\" on this scene, so it was skipped.",
-      "TokenUpdateFailed": "Portrait Picker: couldn't update the token \"{name}\" on this scene. Press F12 and check the Console for details."
+      "TokenUpdateFailed": "Portrait Picker: couldn't update the token \"{name}\" on this scene. Press F12 and check the Console for details.",
+      "NoUploadPermission": "Portrait Picker: you don't have the \"Upload New Files\" permission, so images can't be added here. Ask your GM.",
+      "UploadNeedsFolder": "Portrait Picker: open a folder first (for example your assets folder) before adding images.",
+      "NotAnImage": "Portrait Picker: \"{name}\" was skipped. Only .png, .jpg, .jpeg and .webp images can be added."
     }
   }
 }
