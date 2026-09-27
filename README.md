@@ -12,7 +12,7 @@ Choose one and the module updates, all at once:
 
 Tokens on other scenes and unlinked tokens are not changed.
 
-> **Status:** early development (version 0.5.0, Phase 5 of 6). All main features work;
+> **Status:** early development (version 0.5.1, Phase 5 of 6). All main features work;
 > Phase 6 is polish.
 
 ## Requirements
@@ -42,9 +42,10 @@ Then open your world, go to **Game Settings → Manage Modules**, and enable **P
 - **Shift+click** the portrait to open Foundry's standard file picker instead.
 - Before confirming, choose how this actor's **linked tokens on the scene you're viewing**
   should look:
-  - **Token**: normal size. If the actor's prototype token uses a dynamic token ring, the ring
-    comes back, at the size dnd5e uses for the creature's size (e.g. slightly smaller for
-    Small creatures), just like a freshly placed token.
+  - **Token**: normal size. The token's dynamic ring is left as it is. Coming back from
+    Portrait mode, the ring is put back exactly as it was before. With a ring, dnd5e draws
+    the image at the size it uses for the creature's size (e.g. slightly smaller for Small
+    creatures).
   - **Portrait**: the image is drawn larger (6× by default, set by the GM) and the dynamic
     ring is turned off, for cinematic cut-out portraits. The token still occupies its normal
     grid space, so movement and positioning are unaffected.
@@ -52,6 +53,10 @@ Then open your world, go to **Game Settings → Manage Modules**, and enable **P
   start as **Token**.
 - The prototype token always stays at normal size; only tokens already on the scene get
   Portrait mode.
+- Tip: newly placed tokens copy the actor's **Prototype Token**. If you want new tokens to
+  have a dynamic ring, turn on **Dynamic Ring** in the Prototype Token settings, not just on
+  a token on the scene. Otherwise a fresh token has no ring and looks slightly bigger than a
+  ringed Small token.
 
 ## Settings
 Found under **Game Settings → Configure Settings → Portrait Picker**.
