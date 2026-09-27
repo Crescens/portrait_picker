@@ -46,6 +46,19 @@
     {{/if}}
   </section>
 
+  {{!-- Token / Portrait choice. Only affects tokens on the scene you're viewing. --}}
+  <fieldset class="portrait-picker-mode">
+    <legend>{{localize "PORTRAIT_PICKER.Picker.Mode.Label"}}</legend>
+    <label>
+      <input type="radio" name="portrait-picker-mode" value="token" {{#unless isPortrait}}checked{{/unless}}>
+      {{localize "PORTRAIT_PICKER.Picker.Mode.Token"}}
+    </label>
+    <label>
+      <input type="radio" name="portrait-picker-mode" value="portrait" {{#if isPortrait}}checked{{/if}}>
+      {{portraitLabel}}
+    </label>
+  </fieldset>
+
   <footer class="portrait-picker-buttons">
     <button type="button" data-action="cancel">
       <i class="fa-solid fa-xmark"></i> {{localize "PORTRAIT_PICKER.Picker.Cancel"}}

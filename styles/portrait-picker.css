@@ -119,6 +119,21 @@
   font-style: italic;
 }
 
+/* ---------- Token / Portrait choice ---------- */
+
+.portrait-picker .portrait-picker-mode {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0;
+}
+
+.portrait-picker .portrait-picker-mode label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 /* ---------- Bottom buttons ---------- */
 
 .portrait-picker .portrait-picker-buttons {

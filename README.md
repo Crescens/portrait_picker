@@ -12,9 +12,8 @@ Choose one and the module updates, all at once:
 
 Tokens on other scenes and unlinked tokens are not changed.
 
-> **Status:** early development (Phase 4 of 6). Confirming a choice updates the actor's
-> portrait and prototype token. Updating tokens already on the scene, and the Token/Portrait
-> choice, are not built yet.
+> **Status:** early development (version 0.5.0, Phase 5 of 6). All main features work;
+> Phase 6 is polish.
 
 ## Requirements
 - Foundry VTT v14 (verified on build 367)
@@ -33,7 +32,6 @@ Then open your world, go to **Game Settings → Manage Modules**, and enable **P
 > The GitHub repository must be public for the manifest URL to work.
 
 ## Usage
-*(Coming in later phases.)*
 - **Click** an actor's portrait to open the Portrait Picker. It opens in the folder the image
   was last chosen from, otherwise in `assets/<owner's user name>`, otherwise in `assets`.
 - Click a folder to open it, and the **Up** arrow to go back. Type in the filter box to show
@@ -42,8 +40,18 @@ Then open your world, go to **Game Settings → Manage Modules**, and enable **P
   **Confirm**. The portrait and the prototype token (used for newly placed tokens) both get
   the new image, and the picker remembers that folder for next time.
 - **Shift+click** the portrait to open Foundry's standard file picker instead.
-- Choose **Token** (normal image size) or **Portrait** (the image is drawn larger, while the
-  token still occupies its normal grid space), then click **Confirm**.
+- Before confirming, choose how this actor's **linked tokens on the scene you're viewing**
+  should look:
+  - **Token**: normal size. If the actor's prototype token uses a dynamic token ring, the ring
+    comes back, at the size dnd5e uses for the creature's size (e.g. slightly smaller for
+    Small creatures), just like a freshly placed token.
+  - **Portrait**: the image is drawn larger (6× by default, set by the GM) and the dynamic
+    ring is turned off, for cinematic cut-out portraits. The token still occupies its normal
+    grid space, so movement and positioning are unaffected.
+- The picker starts on whichever of the two the token is currently in. Newly placed tokens
+  start as **Token**.
+- The prototype token always stays at normal size; only tokens already on the scene get
+  Portrait mode.
 
 ## Settings
 Found under **Game Settings → Configure Settings → Portrait Picker**.
@@ -75,3 +83,31 @@ assets/
 ## Known limitations
 - Only the dnd5e default actor sheets are supported.
 - Sheets for unlinked tokens always use Foundry's standard file picker.
+- Only linked tokens on the scene **you** are currently viewing are updated. Tokens on other
+  scenes keep their old image until you change it again while viewing that scene.
+- If a token's dynamic ring has its own **Subject Texture** set, Foundry shows that image
+  inside the ring instead of the token image. This is intentional; clear the Subject Texture
+  if you want the picked image to show in the ring.
+- Token mode sets the image scale back to 1× (dnd5e's standard); a custom token scale is not
+  kept.
+
+## Publishing a release (for the maintainer)
+Releases are built automatically by a GitHub Actions workflow
+(`.github/workflows/release.yml`) when a release is **published**.
+
+1. Make sure the code you want to release is on the branch you'll release from (normally
+   `main`).
+2. On GitHub, open the repository → **Releases** → **Draft a new release**.
+3. **Choose a tag** → type a new tag like `v0.5.0` → **Create new tag on publish**. Set
+   **Target** to the branch from step 1.
+4. Give it a title (e.g. `v0.5.0`) and a short description of what changed.
+5. Leave **Set as a pre-release** unticked (Foundry's manifest link only follows normal
+   releases), then click **Publish release**.
+6. Open the repository's **Actions** tab: a **Release** run appears and should finish with a
+   green tick within a minute or two. The release page then shows `module.json` and
+   `module.zip` under **Assets**.
+7. In Foundry's setup screen → **Add-on Modules**, click **Check for Updates** (or install
+   with the manifest URL the first time).
+
+The workflow takes the version from the tag (`v0.5.0` → `0.5.0`) and writes it, plus the
+correct download link, into the released `module.json`, so the tag is what counts.
