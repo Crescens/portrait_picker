@@ -65,13 +65,15 @@ export async function applyImageToActor(actor, imagePath, folder) {
 /**
  * Update this actor's LINKED tokens on the scene the user is viewing.
  *
- * Token mode:    image at 1x, and the dynamic ring switched back to however
- *                the prototype token has it. (For ringed tokens, dnd5e then
- *                adds its own size adjustment on top, e.g. smaller for Small
- *                creatures, just like a freshly placed token.)
+ * Token mode:    image at 1x. The dynamic ring is left as the token has it,
+ *                except when coming back from Portrait mode: then the ring is
+ *                put back the way it was before Portrait mode. (For ringed
+ *                tokens, dnd5e adds its own size adjustment on top, e.g.
+ *                smaller for Small creatures.)
  * Portrait mode: image drawn larger (the GM's "Portrait mode image scale"
  *                setting) and the ring switched off, because portraits are
  *                cinematic images that shouldn't be clipped into a ring.
+ *                Whether the ring was on is saved on the token first.
  * In both modes the token's size in grid squares is NOT changed.
  *
  * Tokens the user isn't allowed to change are skipped with a warning.
@@ -87,14 +89,6 @@ export async function applyImageToSceneTokens(actor, imagePath, mode) {
     return;
   }
 
-  // Work out the scale and ring once; they're the same for every token.
-  let scale = 1;
-  let ringEnabled = actor.prototypeToken.ring.enabled;
-  if (mode === MODE_PORTRAIT) {
-    scale = game.settings.get(MODULE_ID, "portraitScale");
-    ringEnabled = false;
-  }
-
   // Update tokens one at a time, so one failure doesn't stop the others.
   for (const token of tokens) {
     if (!token.canUserModify(game.user, "update")) {
@@ -102,26 +96,68 @@ export async function applyImageToSceneTokens(actor, imagePath, mode) {
       continue;
     }
 
-    // Read the saved (_source) scale for the sign check. dnd5e changes the
-    // displayed scale for ringed tokens, but never its sign, so either would
-    // work; _source is what we are actually overwriting.
-    const oldTexture = token._source.texture;
-    const changes = {
-      "texture.src": imagePath,
-      "texture.scaleX": keepSign(oldTexture.scaleX, scale),
-      "texture.scaleY": keepSign(oldTexture.scaleY, scale),
-      "ring.enabled": ringEnabled,
-      [`flags.${MODULE_ID}.mode`]: mode
-    };
+    const changes = buildTokenChanges(actor, token, imagePath, mode);
 
     try {
       await token.update(changes);
-      log.debug(`Updated token "${token.name}" (${mode} mode, scale ${scale}, ring ${ringEnabled}).`);
+      log.debug(`Updated token "${token.name}" (${mode} mode):`, changes);
     } catch (err) {
       ui.notifications.warn(game.i18n.format("PORTRAIT_PICKER.Warnings.TokenUpdateFailed", { name: token.name }));
       log.error(`Could not update token "${token.name}":`, err);
     }
   }
+}
+
+/**
+ * Work out the changes for one token.
+ * For scale we read the token's SAVED values (_source), not the displayed
+ * ones, because dnd5e shrinks the displayed scale of ringed Small tokens.
+ * (dnd5e never changes ring.enabled, so token.ring.enabled is safe to read.)
+ * @param {Actor} actor
+ * @param {TokenDocument} token
+ * @param {string} imagePath
+ * @param {string} mode        MODE_TOKEN or MODE_PORTRAIT
+ * @returns {object}           changes to pass to token.update()
+ */
+function buildTokenChanges(actor, token, imagePath, mode) {
+  const saved = token._source;
+  const wasPortrait = token.getFlag(MODULE_ID, "mode") === MODE_PORTRAIT;
+
+  let scale = 1;
+  if (mode === MODE_PORTRAIT) {
+    scale = game.settings.get(MODULE_ID, "portraitScale");
+  }
+
+  const changes = {
+    "texture.src": imagePath,
+    "texture.scaleX": keepSign(saved.texture.scaleX, scale),
+    "texture.scaleY": keepSign(saved.texture.scaleY, scale),
+    [`flags.${MODULE_ID}.mode`]: mode
+  };
+
+  if (mode === MODE_PORTRAIT) {
+    // Remember the ring, but only when ENTERING Portrait mode. If the token
+    // is already a portrait its ring is off, and saving that would lose the
+    // real setting.
+    if (!wasPortrait) {
+      changes[`flags.${MODULE_ID}.ringBeforePortrait`] = token.ring.enabled;
+    }
+    changes["ring.enabled"] = false;
+  } else if (wasPortrait) {
+    // Leaving Portrait mode: put the ring back how it was. If nothing was
+    // saved (e.g. the token became a portrait with an older version of this
+    // module), fall back to the prototype token's ring setting.
+    const remembered = token.getFlag(MODULE_ID, "ringBeforePortrait");
+    if (typeof remembered === "boolean") {
+      changes["ring.enabled"] = remembered;
+    } else {
+      changes["ring.enabled"] = actor.prototypeToken.ring.enabled;
+    }
+  }
+  // Token -> Token: "ring.enabled" isn't in the changes, so the ring stays
+  // exactly as the token has it.
+
+  return changes;
 }
 
 /**

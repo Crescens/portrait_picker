@@ -33,7 +33,8 @@ controls how scene tokens are drawn (see Scale rules).
 
 ## Versioning
 - Each phase bumps `module.json` `version` to `0.<phase>.0` (Phase 5 → 0.5.0) and the
-  `download` URL to the matching `v0.<phase>.0` tag. After Phase 6 the user decides on stretch
+  `download` URL to the matching `v0.<phase>.0` tag. Fixes within a phase bump the patch
+  number (0.5.0 → 0.5.1). After Phase 6 the user decides on stretch
   goals and when to go to 1.0.0.
 - History was reset to a single clean commit at 0.4.0 (end of Phase 4) before going public.
 
@@ -82,6 +83,9 @@ lang/en.json                 all user-facing strings
 - `flags.portrait_picker.lastFolder` (Actor): folder the actor's image was last chosen from.
 - `flags.portrait_picker.mode` (scene TokenDocument): `"token"` or `"portrait"`. Never set on
   the prototype token, so freshly placed tokens have no flag and the picker preselects Token.
+- `flags.portrait_picker.ringBeforePortrait` (scene TokenDocument): boolean, the token's
+  `ring.enabled` saved when ENTERING Portrait mode (not overwritten portrait→portrait);
+  restored on Portrait→Token. Left in place afterwards (harmless; overwritten next time).
 
 ## Design decisions (agreed with the user)
 - **Hooking the click:** `Hooks.on("renderActorSheetV2", (app, element) => ...)`. Find
@@ -125,10 +129,21 @@ lang/en.json                 all user-facing strings
 - **Prototype token:** new image at scale 1 (keep sign of scaleX/scaleY so mirroring survives).
   Never touch the prototype's `ring.enabled`.
 - **Scale rules for scene tokens (linked, current scene only):**
-  - Token mode: `texture.scaleX/Y` = 1 (sign kept), `ring.enabled` copied from the prototype
-    token. dnd5e then applies its own size factor for ringed tokens at data preparation.
+  - Token mode: `texture.scaleX/Y` = 1 (sign kept). dnd5e then applies its own size factor
+    for ringed tokens at data preparation. Ring: Token→Token = NOT touched (not in the
+    update). Portrait→Token = restore `ringBeforePortrait`; if missing (token made a portrait
+    by 0.5.0), fall back to the prototype's `ring.enabled`.
+  - WHY (0.5.1 fix): 0.5.0 copied the prototype's ring into every Token-mode update. The
+    user's Small character had the ring ON on the scene token but OFF on the prototype, so
+    every image change / Portrait→Token turned the ring off. Confirmed via console:
+    `prototypeRing:false, tokenRing:true, savedScale:1, shownScale:0.8, size:"sm"`. A fresh
+    token (copied from the ringless prototype) looks bigger simply because dnd5e's 0.8 Small
+    factor only applies with a ring — expected, documented as a README tip.
   - Portrait mode: `texture.scaleX/Y` = `portraitScale` setting (sign kept), `ring.enabled`
     = false (portraits are cinematic images with transparency; they must not use a ring).
+    Entering Portrait saves the current ring state in `ringBeforePortrait` first.
+  - User confirmed: tokens dragged onto a scene while other tokens are in Portrait mode come
+    in at Token scale (from the prototype). This is the desired behaviour.
   - Never change `width`/`height` (grid footprint).
 - **Scene tokens (Phase 5, `image-updater.js` `applyImageToSceneTokens`):** runs AFTER a
   successful actor update (if the actor update fails, tokens are left alone). Finds tokens with
@@ -192,11 +207,10 @@ lang/en.json                 all user-facing strings
 2. Click hook + placeholder window — DONE, tested by user (incl. as a Trusted Player)
 3. Real folder browsing — DONE, tested by user (GM and Trusted Player)
 4. Actor + prototype token update, remember folder — DONE, tested by user (v0.4.0).
-   Open question: user saw no `portrait_picker` console lines while testing Phase 4 (all
-   behaviour worked). Check debug setting / browser console level filters in Phase 5.
-5. Scene tokens + Token/Portrait scale + rings + GitHub release workflow + version 0.5.0 —
-   DONE, awaiting user test (verify as Trusted Player that token updates aren't blocked;
-   docs don't list per-field player limits; TOKEN_CONFIGURE is on for Trusted by default)
+5. Scene tokens + Token/Portrait scale + rings + GitHub release workflow — 0.5.0 released
+   via the workflow and installed through Foundry's updater (workflow proven on a real
+   release). Console logging confirmed working (user had debug off). 0.5.1 fixes the ring
+   being turned off (see Scale rules) — awaiting user test, incl. as Trusted Player.
 6. Polish, README
 
 ## Release
