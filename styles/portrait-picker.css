@@ -63,6 +63,31 @@
   border-radius: 6px;
 }
 
+/* While files are dragged over the window: dashed outline around the grid. */
+.portrait-picker .portrait-picker-grid.drag-over {
+  outline: 2px dashed var(--color-border-highlight, #ff6400);
+  outline-offset: -2px;
+}
+
+/* The grid can hold keyboard focus (for paste); no extra focus ring needed. */
+.portrait-picker .portrait-picker-grid:focus {
+  outline: none;
+}
+.portrait-picker .portrait-picker-grid.drag-over:focus {
+  outline: 2px dashed var(--color-border-highlight, #ff6400);
+}
+
+.portrait-picker .portrait-picker-upload {
+  flex: 0 0 auto;
+  width: auto;
+  white-space: nowrap;
+}
+
+.portrait-picker .portrait-picker-drop-hint {
+  margin: 0;
+  text-align: center;
+}
+
 /* Our tiles use "display: flex", which would beat the browser's built-in
    rule for the "hidden" attribute. This puts hiding back for the filter box. */
 .portrait-picker .portrait-picker-tile[hidden] {

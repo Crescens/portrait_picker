@@ -16,6 +16,7 @@ Tokens on other scenes and unlinked tokens are not changed.
 - Foundry VTT v14 (verified on build 367)
 - D&D 5e system 5.3.3 or later, using its **default** actor sheets (not legacy sheets, not Tidy 5e)
 - No other modules are needed.
+- Players need Foundry permissions; see [Permissions](#permissions) below.
 
 ## Installation
 In Foundry's setup screen: **Add-on Modules → Install Module**, paste this Manifest URL, then
@@ -39,6 +40,21 @@ To update later, use **Check for Updates** on the Add-on Modules screen.
   **Confirm**. The portrait and the prototype token (used for newly placed tokens) both get
   the new image, and the picker remembers that folder for next time.
 - **Shift+click** the portrait to open Foundry's standard file picker instead.
+
+### Adding new images
+Players with Foundry's **Upload New Files** permission (see [Permissions](#permissions)) can
+add images from their computer straight into the folder the picker is showing:
+
+- **Drag and drop** one or more image files from your computer onto the picker window.
+- Click **Upload** to choose files with your computer's normal file chooser.
+- **Paste** an image with **Ctrl+V** (Cmd+V on Mac), for example straight after copying it from
+  an image generator. Pasted images are named like `pasted-2026-09-27-153045.png`.
+
+The newest upload is selected automatically, so you can click **Confirm** right away. Only
+`.png`, `.jpg`, `.jpeg` and `.webp` files are accepted. Existing files are never replaced: if
+`smile.png` already exists, the new one is saved as `smile-1.png`. Images are uploaded as they
+are (not resized), and your server or host may limit how large an upload can be. You can't
+upload into the very top of the User Data folder; open a folder such as `assets/Alice` first.
 
 Works on every dnd5e actor type whose default sheet has a portrait: characters, NPCs,
 vehicles, groups and encounters.
@@ -74,6 +90,25 @@ Found under **Game Settings → Configure Settings → Portrait Picker**.
 | Portrait mode image scale | GM only | 6 | How many times larger the token image is drawn in Portrait mode. |
 | Debug logging | each browser | Off | Prints extra `portrait_picker \|` messages in the browser console (F12). |
 
+## Permissions
+Portrait Picker only does what a user's Foundry permissions allow. Set these in
+**Game Settings → Configure Permissions**:
+
+| Foundry permission | Needed for | Default in Foundry |
+|---|---|---|
+| **Use File Browser** | Opening the picker and browsing folders | Trusted Player and above |
+| **Upload New Files** | Adding images (drag-and-drop, Upload, paste) | Assistant GM and above |
+
+> ⚠️ **Think before granting "Upload New Files" to players.** Foundry's upload permission is
+> not limited to a player's own folder: anyone with it can upload files into **any** folder
+> in your User Data (including other players' folders), whether they use this module, Foundry's
+> own file picker, or anything else. They can't delete or overwrite files through this module,
+> but uploads use your server's storage. Only grant it to roles you trust. Without it, the
+> picker still works for choosing existing images; the upload options are simply hidden.
+
+Players also need **Owner** permission on the actor to change its image, and permission to
+change their tokens (normally included with ownership).
+
 ## Folder setup
 Images live in Foundry's User Data folder under `assets/<player name>/`, one folder per player:
 
@@ -99,6 +134,9 @@ assets/
 |---|---|
 | The picker opens in `assets` with a yellow "couldn't open the folder" message | The player's folder name doesn't exactly match their Foundry user name, or the remembered folder was renamed or deleted. |
 | "you don't have the Use File Browser permission" | Give the player's role the **Use File Browser** permission in **Game Settings → Configure Permissions**. |
+| No **Upload** button, or "you don't have the Upload New Files permission" | The player's role lacks **Upload New Files**. See [Permissions](#permissions) before granting it. |
+| "couldn't upload …" | The file may be larger than your server or host allows, or the connection dropped. Check the console (F12) for details. |
+| Pasting does nothing | Click inside the picker window first so it has focus, and make sure an image (not text or a file link) was copied. |
 | Clicking the portrait opens Foundry's normal file picker | Shift was held, **Use Portrait Picker on my sheets** is off, or it's an **unlinked** token's sheet (those always use the standard picker). |
 | A token on the scene didn't change | It's unlinked, it's on a different scene from the one you're viewing, or you don't have permission to change it (you'll see a yellow message). |
 | The ring shows a different picture than the one chosen | The token's ring has its own **Subject Texture** set, which Foundry shows instead. Clear it in the token's settings. |
@@ -116,7 +154,13 @@ assets/
 - Thumbnails are the full images, loaded as you scroll. Very large folders of very large
   images may be slow.
 
+## License
+[MIT](LICENSE): anyone may use, copy, change and share this module, including in their own
+modules, as long as the copyright notice is kept.
+
 ## Changelog
+- **0.7.0**: Add images from your computer by drag-and-drop, an Upload button or paste
+  (Ctrl+V), with no overwriting of existing files. New Permissions section. MIT license.
 - **0.6.0**: Polish. The picker notes when there's no linked token on the scene. README gains
   troubleshooting and changelog sections.
 - **0.5.1**: A token's own dynamic ring setting is kept; Portrait mode remembers the ring and
@@ -133,9 +177,9 @@ Releases are built automatically by a GitHub Actions workflow
 1. Make sure the code you want to release is on the branch you'll release from (normally
    `main`).
 2. On GitHub, open the repository → **Releases** → **Draft a new release**.
-3. **Choose a tag** → type a new tag like `v0.6.0` → **Create new tag on publish**. Set
+3. **Choose a tag** → type a new tag like `v0.7.0` → **Create new tag on publish**. Set
    **Target** to the branch from step 1.
-4. Give it a title (e.g. `v0.6.0`) and a short description of what changed.
+4. Give it a title (e.g. `v0.7.0`) and a short description of what changed.
 5. Leave **Set as a pre-release** unticked (Foundry's manifest link only follows normal
    releases), then click **Publish release**.
 6. Open the repository's **Actions** tab: a **Release** run appears and should finish with a
@@ -144,5 +188,5 @@ Releases are built automatically by a GitHub Actions workflow
 7. In Foundry's setup screen → **Add-on Modules**, click **Check for Updates** (or install
    with the manifest URL the first time).
 
-The workflow takes the version from the tag (`v0.6.0` → `0.6.0`) and writes it, plus the
+The workflow takes the version from the tag (`v0.7.0` → `0.7.0`) and writes it, plus the
 correct download link, into the released `module.json`, so the tag is what counts.

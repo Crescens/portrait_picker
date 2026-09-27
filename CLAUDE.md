@@ -66,9 +66,11 @@ scripts/sheet-hook.js        intercepts the portrait click
 scripts/folders.js           owner lookup, start folder, safe browse, path helpers
 scripts/picker-app.js        the picker window (ApplicationV2 + Handlebars)
 scripts/image-updater.js     actor, prototype, scene-token updates; Token/Portrait modes
+scripts/uploader.js          uploads (drag-and-drop, Upload button, paste) into a folder
 templates/picker.hbs         picker HTML
 styles/portrait-picker.css   picker styles
 lang/en.json                 all user-facing strings
+LICENSE                      MIT, "Copyright (c) 2026 Crescens" (shipped in the zip)
 .github/workflows/release.yml release packaging
 ```
 
@@ -162,6 +164,28 @@ lang/en.json                 all user-facing strings
   calls `bringToFront()` on the existing one (found via `foundry.applications.instances`).
 - **Picker preselect:** Portrait if the actor's linked token on the current scene has
   `flags.portrait_picker.mode === "portrait"`, otherwise Token.
+- **Uploads (0.7.0, `uploader.js` + `picker-app.js` `activateUploads`/`handleNewFiles`):**
+  - Needs `game.user.can("FILES_UPLOAD")` ("Upload New Files"; Foundry default role is
+    Assistant GM, the user granted it to Trusted Player). Without it the Upload button and
+    drop hint are hidden and drop/paste show `Warnings.NoUploadPermission`.
+  - `FilePicker.implementation.upload("data", folder, file, {}, { notify: false })`; success
+    = response has `path` (v14 docs only say "the response object"). Throw / falsy / no path
+    → `Errors.UploadFailed` per file; others continue. One summary `Picker.Uploaded` info.
+  - Target = the folder being shown; refuses `""` (top of User Data).
+  - Allowed by lower-cased extension, or by MIME via `IMAGE_MIME_EXTENSIONS` (pasted blobs).
+    Extension is always written lower-case.
+  - NEVER overwrite: names already in the folder (compared lower-case) get `-1`, `-2`, ...
+    Pasted images (name "" or "image.*") are renamed `pasted-YYYY-MM-DD-HHMMSS.ext`.
+  - Listeners live on `.portrait-picker-body` (rebuilt each render, so no duplicates):
+    dragover (only when `dataTransfer.types` includes "Files") / dragleave / drop; hidden
+    `<input type=file multiple>` opened by the `upload` action; `paste` (only when the
+    clipboard holds files; `stopPropagation` so the canvas doesn't also react). The grid has
+    `tabindex="0"` and is focused after each render so Ctrl+V works immediately. Thumbnails
+    are `draggable="false"` so dragging a tile isn't mistaken for a file drop.
+  - After upload: re-browse the folder and select the last uploaded file (`goToFolder(folder,
+    selectPath)`); `this.uploading` blocks overlapping uploads.
+  - README has a Permissions section warning that Upload New Files is not limited to a
+    player's own folder (user asked for this to be documented for other groups).
 - **No-tokens note (0.6.0):** if `findLinkedTokensOnViewedScene(actor)` is empty, the picker
   shows `PORTRAIT_PICKER.Picker.Mode.NoTokens` under the Token/Portrait radios (the choice
   would change nothing).
@@ -215,13 +239,18 @@ lang/en.json                 all user-facing strings
    release). Console logging confirmed working (user had debug off). 0.5.1 fixes the ring
    being turned off (see Scale rules) — DONE, tested by user.
 6. Polish (0.6.0): code review pass (no bugs found), no-tokens note in the picker, README
-   rewritten (troubleshooting, changelog), `bugs` URL in module.json — awaiting user test.
-   After Phase 6: discuss stretch goals and when to go to 1.0.0.
+   rewritten (troubleshooting, changelog), `bugs` URL in module.json — DONE, tested by user.
+
+## Stretch goals
+- 0.7.0: upload via drag-and-drop, Upload button and paste; MIT license; author name
+  "Crescens" everywhere — awaiting user test.
+- Later / lower priority (user's call): keyboard navigation, double-click to confirm, updating
+  tokens on all scenes. Going to 1.0.0 is the user's decision.
 
 ## Testing approach
 - Manual testing in Foundry by the user (GM and a Trusted Player) after every phase.
 - Claude also runs throwaway Node scripts with mocked `game`/`ui`/`canvas`/documents against
-  `folders.js` and `image-updater.js` (kept in the session scratchpad, NOT in the repo, to
+  `folders.js`, `image-updater.js` and `uploader.js` (kept in the session scratchpad, NOT in the repo, to
   keep the repo tooling-free). Re-create them when changing that logic.
 - Keep the README "Changelog" section updated with every release.
 
@@ -230,7 +259,7 @@ Manifest URL: `https://github.com/Crescens/portrait_picker/releases/latest/downl
 The repo is public. `.github/workflows/release.yml` runs on `release: published`: tag
 `vX.Y.Z` → version `X.Y.Z` (rejects other formats); `jq` writes version/manifest/download
 (built from `github.repository`) into module.json; zips `module.json README.md scripts styles
-templates lang` (module.json at zip root; CLAUDE.md and .github are NOT shipped); uploads both
+templates lang LICENSE` (module.json at zip root; CLAUDE.md and .github are NOT shipped); uploads both
 with `gh release upload --clobber`. Only first-party `actions/checkout@v4`; no third-party
 actions. The tag must point at a commit that contains the workflow file. Pre-releases are
 ignored by `releases/latest`. Maintainer steps are in README "Publishing a release".

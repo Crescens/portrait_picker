@@ -22,3 +22,11 @@ export const ASSETS_ROOT = "assets";
 // Image types the picker shows. Written in lower case; we compare against the
 // lower-cased file name, so "Happy.PNG" is shown too.
 export const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp"];
+
+// Image types by their "MIME type" (the kind of file the browser says it is).
+// Pasted images have no real file name, so we use this to pick the extension.
+export const IMAGE_MIME_EXTENSIONS = {
+  "image/png": ".png",
+  "image/jpeg": ".jpg",
+  "image/webp": ".webp"
+};
