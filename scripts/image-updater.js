@@ -181,10 +181,11 @@ export function getCurrentMode(actor) {
  * All tokens on the scene this user is currently looking at that are linked
  * to this actor. canvas.scene is the scene being viewed (it is null if no
  * scene is open, e.g. the canvas is turned off).
+ * Also used by the picker to decide whether to show the "no tokens" note.
  * @param {Actor} actor
  * @returns {TokenDocument[]}
  */
-function findLinkedTokensOnViewedScene(actor) {
+export function findLinkedTokensOnViewedScene(actor) {
   const scene = canvas.scene;
   if (!scene) {
     return [];

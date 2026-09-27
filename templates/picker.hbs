@@ -57,6 +57,9 @@
       <input type="radio" name="portrait-picker-mode" value="portrait" {{#if isPortrait}}checked{{/if}}>
       {{portraitLabel}}
     </label>
+    {{#unless hasSceneTokens}}
+    <span class="portrait-picker-hint">{{localize "PORTRAIT_PICKER.Picker.Mode.NoTokens"}}</span>
+    {{/unless}}
   </fieldset>
 
   <footer class="portrait-picker-buttons">

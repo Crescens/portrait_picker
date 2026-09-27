@@ -62,14 +62,14 @@ scripts/main.js              entry point; init/ready hooks
 scripts/constants.js         MODULE_ID, LOG_PREFIX
 scripts/logger.js            debug/warn/error console helpers
 scripts/settings.js          registers settings
-scripts/sheet-hook.js        (Phase 2) intercepts the portrait click
-scripts/folders.js           (Phase 3) owner lookup, start folder, safe browse
-scripts/picker-app.js        (Phase 2/3) the picker window (ApplicationV2 + Handlebars)
-scripts/image-updater.js     (Phase 4/5) actor, prototype, scene-token updates
-templates/picker.hbs         (Phase 2/3) picker HTML
+scripts/sheet-hook.js        intercepts the portrait click
+scripts/folders.js           owner lookup, start folder, safe browse, path helpers
+scripts/picker-app.js        the picker window (ApplicationV2 + Handlebars)
+scripts/image-updater.js     actor, prototype, scene-token updates; Token/Portrait modes
+templates/picker.hbs         picker HTML
 styles/portrait-picker.css   picker styles
 lang/en.json                 all user-facing strings
-.github/workflows/release.yml (Phase 5) release packaging
+.github/workflows/release.yml release packaging
 ```
 
 ## Settings
@@ -162,6 +162,9 @@ lang/en.json                 all user-facing strings
   calls `bringToFront()` on the existing one (found via `foundry.applications.instances`).
 - **Picker preselect:** Portrait if the actor's linked token on the current scene has
   `flags.portrait_picker.mode === "portrait"`, otherwise Token.
+- **No-tokens note (0.6.0):** if `findLinkedTokensOnViewedScene(actor)` is empty, the picker
+  shows `PORTRAIT_PICKER.Picker.Mode.NoTokens` under the Token/Portrait radios (the choice
+  would change nothing).
 
 ## Key API findings
 ### dnd5e 5.3.3 (tag release-5.3.3)
@@ -210,8 +213,17 @@ lang/en.json                 all user-facing strings
 5. Scene tokens + Token/Portrait scale + rings + GitHub release workflow — 0.5.0 released
    via the workflow and installed through Foundry's updater (workflow proven on a real
    release). Console logging confirmed working (user had debug off). 0.5.1 fixes the ring
-   being turned off (see Scale rules) — awaiting user test, incl. as Trusted Player.
-6. Polish, README
+   being turned off (see Scale rules) — DONE, tested by user.
+6. Polish (0.6.0): code review pass (no bugs found), no-tokens note in the picker, README
+   rewritten (troubleshooting, changelog), `bugs` URL in module.json — awaiting user test.
+   After Phase 6: discuss stretch goals and when to go to 1.0.0.
+
+## Testing approach
+- Manual testing in Foundry by the user (GM and a Trusted Player) after every phase.
+- Claude also runs throwaway Node scripts with mocked `game`/`ui`/`canvas`/documents against
+  `folders.js` and `image-updater.js` (kept in the session scratchpad, NOT in the repo, to
+  keep the repo tooling-free). Re-create them when changing that logic.
+- Keep the README "Changelog" section updated with every release.
 
 ## Release
 Manifest URL: `https://github.com/crescens/portrait_picker/releases/latest/download/module.json`.
