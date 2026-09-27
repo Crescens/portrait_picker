@@ -1,0 +1,63 @@
+# release.yml
+# Packages the module whenever a GitHub release is PUBLISHED.
+#
+# What it does:
+#   1. Reads the version from the release's tag (tag "v0.5.0" -> version "0.5.0").
+#   2. Writes that version, plus the correct manifest and download links, into module.json.
+#   3. Zips the module files into module.zip (module.json at the top of the zip,
+#      which is where Foundry expects it).
+#   4. Attaches module.json and module.zip to the release.
+#
+# Foundry then installs/updates from:
+#   https://github.com/<owner>/portrait_picker/releases/latest/download/module.json
+# "latest" means the newest published release that is NOT marked as a pre-release.
+
+name: Release
+
+on:
+  release:
+    types: [published]
+
+# Needed so the workflow can attach files to the release.
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    env:
+      # Passed in as environment variables (not pasted into the scripts) so
+      # an unusual tag name can't break or change the commands below.
+      TAG: ${{ github.event.release.tag_name }}
+      REPO: ${{ github.repository }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Check out the code at the release tag
+        uses: actions/checkout@v4
+
+      - name: Work out the version from the tag
+        run: |
+          VERSION="${TAG#v}"
+          # Stop with a clear message if the tag doesn't look like v1.2.3 or 1.2.3.
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Release tag '$TAG' should look like v0.5.0"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Put the version and links into module.json
+        run: |
+          jq --arg version "$VERSION" \
+             --arg manifest "https://github.com/$REPO/releases/latest/download/module.json" \
+             --arg download "https://github.com/$REPO/releases/download/$TAG/module.zip" \
+             '.version = $version | .manifest = $manifest | .download = $download' \
+             module.json > module.json.tmp
+          mv module.json.tmp module.json
+          cat module.json
+
+      - name: Build module.zip
+        run: zip -r module.zip module.json README.md scripts styles templates lang
+
+      - name: Attach module.json and module.zip to the release
+        run: gh release upload "$TAG" module.json module.zip --clobber --repo "$REPO"

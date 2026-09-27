@@ -21,7 +21,12 @@
       "Current": "Current",
       "Empty": "No folders or images here.",
       "Confirm": "Confirm",
-      "Cancel": "Cancel"
+      "Cancel": "Cancel",
+      "Mode": {
+        "Label": "Tokens on this scene",
+        "Token": "Token (normal size)",
+        "Portrait": "Portrait ({scale}× image)"
+      }
     },
     "Errors": {
       "OpenFailed": "Portrait Picker could not open. Press F12 and check the Console for details.",
@@ -32,7 +37,9 @@
       "FolderMissing": "Portrait Picker: couldn't open the folder \"{missing}\", so it's showing \"{shown}\" instead. Check the folder exists and its name matches exactly (including capital letters).",
       "FolderUnreadable": "Portrait Picker: couldn't open the folder \"{folder}\". It may have been moved or deleted.",
       "NoBrowsePermission": "Portrait Picker: you don't have the \"Use File Browser\" permission. Ask your GM to enable it.",
-      "NoActorPermission": "Portrait Picker: you don't have permission to change \"{name}\"."
+      "NoActorPermission": "Portrait Picker: you don't have permission to change \"{name}\".",
+      "NoTokenPermission": "Portrait Picker: you don't have permission to change the token \"{name}\" on this scene, so it was skipped.",
+      "TokenUpdateFailed": "Portrait Picker: couldn't update the token \"{name}\" on this scene. Press F12 and check the Console for details."
     }
   }
 }

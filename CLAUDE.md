@@ -130,6 +130,14 @@ lang/en.json                 all user-facing strings
   - Portrait mode: `texture.scaleX/Y` = `portraitScale` setting (sign kept), `ring.enabled`
     = false (portraits are cinematic images with transparency; they must not use a ring).
   - Never change `width`/`height` (grid footprint).
+- **Scene tokens (Phase 5, `image-updater.js` `applyImageToSceneTokens`):** runs AFTER a
+  successful actor update (if the actor update fails, tokens are left alone). Finds tokens with
+  `canvas.scene.tokens` filtered by `actorLink && actorId === actor.id` (canvas.scene = viewed
+  scene; null → nothing to do). Per token: `canUserModify(game.user, "update")` else warn and
+  skip; one `token.update()` each in try/catch (one failure doesn't stop others). Sign check
+  reads `token._source.texture` (dnd5e alters the prepared scale for ringed tokens, not the
+  sign). Picker mode: `getCurrentMode(actor)` in the constructor; radio `change` listener in
+  `_onRender` stores `this.mode` so it survives folder navigation re-renders.
 - **Ring subject texture:** never modified by this module. If a token has an explicit
   `ring.subject.texture`, it intentionally overrides the token image inside the ring.
 - **Permissions:** only update documents the user can update (`canUserModify(game.user,
@@ -186,10 +194,17 @@ lang/en.json                 all user-facing strings
 4. Actor + prototype token update, remember folder — DONE, tested by user (v0.4.0).
    Open question: user saw no `portrait_picker` console lines while testing Phase 4 (all
    behaviour worked). Check debug setting / browser console level filters in Phase 5.
-5. Scene tokens + Token/Portrait scale + rings (verify TOKEN_CONFIGURE doesn't block players)
-   + GitHub release workflow (moved here from Phase 6) + version 0.5.0
+5. Scene tokens + Token/Portrait scale + rings + GitHub release workflow + version 0.5.0 —
+   DONE, awaiting user test (verify as Trusted Player that token updates aren't blocked;
+   docs don't list per-field player limits; TOKEN_CONFIGURE is on for Trusted by default)
 6. Polish, README
 
 ## Release
 Manifest URL: `https://github.com/crescens/portrait_picker/releases/latest/download/module.json`.
-The repo goes public after Phase 4; the manifest URL only works once a release exists.
+The repo is public. `.github/workflows/release.yml` runs on `release: published`: tag
+`vX.Y.Z` → version `X.Y.Z` (rejects other formats); `jq` writes version/manifest/download
+(built from `github.repository`) into module.json; zips `module.json README.md scripts styles
+templates lang` (module.json at zip root; CLAUDE.md and .github are NOT shipped); uploads both
+with `gh release upload --clobber`. Only first-party `actions/checkout@v4`; no third-party
+actions. The tag must point at a commit that contains the workflow file. Pre-releases are
+ignored by `releases/latest`. Maintainer steps are in README "Publishing a release".

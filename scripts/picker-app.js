@@ -9,6 +9,7 @@
  * The window remembers:
  * - which folder it is showing (this.folder, this.dirs, this.files)
  * - which image the user has clicked (this.selectedPath)
+ * - whether "Token" or "Portrait" is chosen (this.mode)
  * Changing folder re-reads the folder and redraws the window.
  *
  * Confirm hands the chosen image to image-updater.js, which saves it.
@@ -16,7 +17,7 @@
 
 import { MODULE_ID } from "./constants.js";
 import { browseFolder, findStartingFolder, parentFolder, displayName, samePath } from "./folders.js";
-import { applyImageToActor } from "./image-updater.js";
+import { applyImageToActor, applyImageToSceneTokens, getCurrentMode, MODE_PORTRAIT } from "./image-updater.js";
 import * as log from "./logger.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
@@ -34,6 +35,10 @@ export class PortraitPickerApp extends HandlebarsApplicationMixin(ApplicationV2)
     super(options);
     this.actor = actor;
     this.showFolder(contents);
+
+    // Start on the mode the actor's token on this scene is already in.
+    // A freshly placed token has never been set, so it starts on Token.
+    this.mode = getCurrentMode(actor);
   }
 
   /**
@@ -126,12 +131,18 @@ export class PortraitPickerApp extends HandlebarsApplicationMixin(ApplicationV2)
 
     context.isEmpty = context.folders.length === 0 && context.images.length === 0;
     context.hasSelection = this.selectedPath !== null;
+    context.isPortrait = this.mode === MODE_PORTRAIT;
+    // e.g. "Portrait (6× image)", using the GM's current scale setting.
+    context.portraitLabel = game.i18n.format("PORTRAIT_PICKER.Picker.Mode.Portrait", {
+      scale: game.settings.get(MODULE_ID, "portraitScale")
+    });
     return context;
   }
 
   /**
-   * Runs after every redraw. Hooks up the filter box. (It's a plain text box,
-   * not a button, so it isn't handled by the "actions" list above.)
+   * Runs after every redraw. Hooks up the filter box and the Token/Portrait
+   * choice. (They're form inputs, not buttons, so they aren't handled by the
+   * "actions" list above.)
    */
   async _onRender(context, options) {
     await super._onRender(context, options);
@@ -139,6 +150,18 @@ export class PortraitPickerApp extends HandlebarsApplicationMixin(ApplicationV2)
     if (filterInput) {
       filterInput.addEventListener("input", () => {
         this.applyFilter(filterInput.value);
+      });
+    }
+
+    // Remember the chosen mode on the window, so it survives moving between
+    // folders (which redraws the window).
+    const modeInputs = this.element.querySelectorAll('input[name="portrait-picker-mode"]');
+    for (const input of modeInputs) {
+      input.addEventListener("change", () => {
+        if (input.checked) {
+          this.mode = input.value;
+          log.debug(`Mode set to "${this.mode}".`);
+        }
       });
     }
   }
@@ -206,9 +229,11 @@ export class PortraitPickerApp extends HandlebarsApplicationMixin(ApplicationV2)
   }
 
   /**
-   * Confirm button: save the selected image to the actor, then close.
-   * If saving fails, the window stays open so the user can try again
-   * (applyImageToActor has already shown them a message).
+   * Confirm button: save the selected image to the actor, then to the
+   * actor's linked tokens on the scene being viewed, then close.
+   * If saving the actor fails, the window stays open so the user can try
+   * again (applyImageToActor has already shown them a message), and the
+   * tokens are left alone so they don't get out of step with the actor.
    */
   static async onConfirm(event, target) {
     if (!this.selectedPath) {
@@ -218,11 +243,13 @@ export class PortraitPickerApp extends HandlebarsApplicationMixin(ApplicationV2)
     // Disable Confirm while saving, so a double-click can't save twice.
     target.disabled = true;
     const saved = await applyImageToActor(this.actor, this.selectedPath, this.folder);
-    if (saved) {
-      await this.close();
-    } else {
+    if (!saved) {
       target.disabled = false;
+      return;
     }
+
+    await applyImageToSceneTokens(this.actor, this.selectedPath, this.mode);
+    await this.close();
   }
 
   /** Cancel button: close without changing anything. */
