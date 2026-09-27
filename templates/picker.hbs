@@ -1,0 +1,57 @@
+{{!--
+  picker.hbs
+  Contents of the Portrait Picker window. Values like {{folderLabel}} come from
+  _prepareContext() in scripts/picker-app.js. Buttons with data-action="..."
+  are connected to functions in the "actions" list in picker-app.js.
+--}}
+<div class="portrait-picker-body">
+
+  {{!-- Top bar: Up button, current folder, filter box --}}
+  <header class="portrait-picker-toolbar">
+    <button type="button" class="portrait-picker-up" data-action="goUp"
+            data-tooltip="{{localize "PORTRAIT_PICKER.Picker.Up"}}"
+            aria-label="{{localize "PORTRAIT_PICKER.Picker.Up"}}" {{#unless canGoUp}}disabled{{/unless}}>
+      <i class="fa-solid fa-arrow-turn-up"></i>
+    </button>
+    <span class="portrait-picker-folder" title="{{folderLabel}}">{{folderLabel}}</span>
+    <input type="search" class="portrait-picker-filter"
+           placeholder="{{localize "PORTRAIT_PICKER.Picker.Filter"}}"
+           aria-label="{{localize "PORTRAIT_PICKER.Picker.Filter"}}">
+  </header>
+
+  {{!-- Grid of folders first, then images --}}
+  <section class="portrait-picker-grid">
+    {{#each folders}}
+    <button type="button" class="portrait-picker-tile folder" data-action="openFolder"
+            data-path="{{path}}" data-search-name="{{searchName}}">
+      <i class="fa-solid fa-folder"></i>
+      <span class="portrait-picker-name">{{name}}</span>
+    </button>
+    {{/each}}
+
+    {{#each images}}
+    <button type="button"
+            class="portrait-picker-tile image {{#if isCurrent}}current{{/if}} {{#if isSelected}}selected{{/if}}"
+            data-action="selectImage" data-path="{{path}}" data-search-name="{{searchName}}">
+      <img src="{{path}}" alt="{{name}}" loading="lazy">
+      <span class="portrait-picker-name">{{name}}</span>
+      {{#if isCurrent}}
+      <span class="portrait-picker-badge">{{localize "PORTRAIT_PICKER.Picker.Current"}}</span>
+      {{/if}}
+    </button>
+    {{/each}}
+
+    {{#if isEmpty}}
+    <p class="portrait-picker-empty">{{localize "PORTRAIT_PICKER.Picker.Empty"}}</p>
+    {{/if}}
+  </section>
+
+  <footer class="portrait-picker-buttons">
+    <button type="button" data-action="cancel">
+      <i class="fa-solid fa-xmark"></i> {{localize "PORTRAIT_PICKER.Picker.Cancel"}}
+    </button>
+    <button type="button" data-action="confirm" {{#unless hasSelection}}disabled{{/unless}}>
+      <i class="fa-solid fa-check"></i> {{localize "PORTRAIT_PICKER.Picker.Confirm"}}
+    </button>
+  </footer>
+</div>

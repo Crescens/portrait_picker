@@ -1,0 +1,195 @@
+# CLAUDE.md — Portrait Picker (Foundry VTT module)
+
+Context for future Claude sessions. Keep this file updated as the project changes.
+
+## What this module does
+Players click the portrait on a dnd5e actor sheet and a custom picker opens (instead of
+Foundry's FilePicker). Choosing an image sets, in one go:
+1. the actor portrait (`img`)
+2. the prototype token image (`prototypeToken.texture.src`), always at 1x
+3. every LINKED token for that actor on the scene the user is currently VIEWING
+
+Tokens on other scenes and unlinked tokens are never changed. A "Token" / "Portrait" choice
+controls how scene tokens are drawn (see Scale rules).
+
+## Target versions (strict)
+- Foundry VTT v14, build 367 — module.json `compatibility`: minimum "14", verified "14.367"
+- dnd5e system 5.3.3 — ONLY its default (non-legacy) actor sheets. No Tidy 5e, no legacy sheets.
+- Hosting: a standard hosted Foundry server on Linux, so paths are case-sensitive.
+
+## Test world
+- Players have the **Trusted Player** role (which has "Use File Browser"). Their user names
+  exactly match their folders under `assets/`.
+- When writing player-permission tests, test as a Trusted Player, not the GM (GM has more
+  permissions and would hide problems).
+- Dev builds before a release exists: download the branch ZIP from GitHub and upload the folder
+  (renamed `portrait_picker`) to `Data/modules/` on the server.
+
+## Privacy rules (the repo is public)
+- NEVER commit real player/user names, the hosting provider's name, IP addresses, server
+  addresses, emails, passwords, keys or tokens. Use generic examples (Alice, Bob, "assets/Alice").
+- Do not put Claude session links in commit messages (omit the `Claude-Session:` trailer).
+- Before each push, grep for the above.
+
+## Versioning
+- Each phase bumps `module.json` `version` to `0.<phase>.0` (Phase 5 → 0.5.0) and the
+  `download` URL to the matching `v0.<phase>.0` tag. After Phase 6 the user decides on stretch
+  goals and when to go to 1.0.0.
+- History was reset to a single clean commit at 0.4.0 (end of Phase 4) before going public.
+
+## The user's preferences (important)
+- The user is new to Foundry module development and will not use code they don't understand.
+- Plain JavaScript ES modules. No build step, no TypeScript, no libraries, no module dependencies.
+- Simple, safe, well-commented code. Comments explain WHY in beginner-friendly language.
+  Avoid clever one-liners and advanced JS features when a simpler version works.
+- Small files, each with a short header comment explaining its purpose.
+- All user-facing text lives in `lang/en.json` (keys under `PORTRAIT_PICKER.*`).
+- Console logging uses the prefix `portrait_picker |` (see `scripts/logger.js`);
+  `log.debug()` only prints when the "Debug logging" client setting is on.
+- Friendly `ui.notifications` messages instead of silent failures.
+- Work in small phases. After EVERY phase stop and wait for approval, and give:
+  (1) plain-language walkthrough of each new/changed file, (2) step-by-step manual Foundry
+  test instructions (beginner level, e.g. how to open the console), (3) what to report back.
+- If unsure, or an assumption looks wrong, ask instead of guessing.
+- Do not rely on memory for Foundry APIs; v14 changed a lot. Check https://foundryvtt.com/api/
+  and the dnd5e source (tag `release-5.3.3`).
+
+## File layout
+```
+module.json                  manifest (id portrait_picker)
+scripts/main.js              entry point; init/ready hooks
+scripts/constants.js         MODULE_ID, LOG_PREFIX
+scripts/logger.js            debug/warn/error console helpers
+scripts/settings.js          registers settings
+scripts/sheet-hook.js        (Phase 2) intercepts the portrait click
+scripts/folders.js           (Phase 3) owner lookup, start folder, safe browse
+scripts/picker-app.js        (Phase 2/3) the picker window (ApplicationV2 + Handlebars)
+scripts/image-updater.js     (Phase 4/5) actor, prototype, scene-token updates
+templates/picker.hbs         (Phase 2/3) picker HTML
+styles/portrait-picker.css   picker styles
+lang/en.json                 all user-facing strings
+.github/workflows/release.yml (Phase 5) release packaging
+```
+
+## Settings
+| key | scope | default | notes |
+|---|---|---|---|
+| `enabled` | user | true | "Use Portrait Picker on my sheets" |
+| `portraitScale` | world, restricted | 6 | Portrait-mode texture multiplier, range 1–10 step 0.5 |
+| `debug` | client | false | Enables `log.debug` output |
+
+## Flags
+- `flags.portrait_picker.lastFolder` (Actor): folder the actor's image was last chosen from.
+- `flags.portrait_picker.mode` (scene TokenDocument): `"token"` or `"portrait"`. Never set on
+  the prototype token, so freshly placed tokens have no flag and the picker preselects Token.
+
+## Design decisions (agreed with the user)
+- **Hooking the click:** `Hooks.on("renderActorSheetV2", (app, element) => ...)`. Find
+  `.portrait [data-action="editImage"]` and add a click listener on that `<img>`. On a normal
+  click, `event.stopPropagation()` so ApplicationV2's action handler (one listener on the
+  sheet element) never sees it, then open our picker. Shift+click, setting off, or
+  `app.actor.isToken` (unlinked token sheet) → do nothing, so dnd5e opens the standard picker.
+  Sheets can redraw only some parts, so the element is marked with
+  `data-portrait-picker-bound="true"` to avoid adding a second listener. No monkey-patching.
+  The `enabled` setting is read at click time, so toggling it needs no sheet reopen.
+- **FilePicker source:** `"data"`. Extensions: `.png .jpg .jpeg .webp` only. We call
+  `FilePicker.browse("data", folder)` WITHOUT the `extensions` option and filter in
+  `folders.js` ourselves, so the check ignores capital letters (`Smile.PNG`).
+- **Browsing is defensive** (`folders.js` `browseFolder`): any throw or a result without
+  `dirs`/`files` arrays → `null`; bare names get the folder prepended; paths are
+  compared/displayed decoded (`samePath`, `displayName`). The top of User Data is `""` (shown as "/").
+  **Confirmed on the user's server (v14.367):** a missing folder THROWS
+  (`Directory assets/NoSuchFolder does not exist or is not accessible in this storage location`);
+  `target` is `"assets/Alice"`; `dirs`/`files` are FULL paths (`"assets/Alice/Pet"`,
+  `"assets/Alice/Cache.png"`); non-image files (e.g. `README.txt`) are returned when no
+  `extensions` option is passed, so our own filter is needed.
+- **Picker UI:** filter box hides tiles (`hidden` attribute) instead of re-rendering, so focus
+  and typing aren't lost. Selecting an image only toggles CSS classes (no re-render). Changing
+  folder re-browses and re-renders (the filter is cleared). On entering a folder, the actor's
+  current image is preselected if it's there, so Confirm works immediately.
+- **Starting-folder warning:** if the first candidate (remembered folder, or the owner folder
+  when nothing is remembered) can't be read, a warning names the missing folder and the one
+  shown instead.
+- **Opening guard:** `actorsBeingOpened` Set in `picker-app.js` stops a double-click from
+  opening two windows while the starting folder is still loading.
+- **Start folder:** actor flag `lastFolder` → `assets/<owner user name>` → `assets/`.
+  Owner = the non-GM user whose assigned `character` is this actor, else the first non-GM with
+  OWNER permission. Folder names must exactly match Foundry user names (case-sensitive).
+- **Saving (Phase 4, `image-updater.js` `applyImageToActor`):** checks
+  `actor.canUserModify(game.user, "update")`, then ONE `actor.update()` with dotted keys:
+  `img`, `prototypeToken.texture.src`, `prototypeToken.texture.scaleX/Y` (1, sign kept via
+  `keepSign`), `flags.portrait_picker.lastFolder` (the picker's current folder). Returns
+  true/false; on failure the picker stays open and Confirm is re-enabled. dnd5e's
+  `getPreferredArtwork` cache is cleared by `_clearCachedValues` on data prep, so the sheet
+  shows the new image without extra work.
+- **Prototype token:** new image at scale 1 (keep sign of scaleX/scaleY so mirroring survives).
+  Never touch the prototype's `ring.enabled`.
+- **Scale rules for scene tokens (linked, current scene only):**
+  - Token mode: `texture.scaleX/Y` = 1 (sign kept), `ring.enabled` copied from the prototype
+    token. dnd5e then applies its own size factor for ringed tokens at data preparation.
+  - Portrait mode: `texture.scaleX/Y` = `portraitScale` setting (sign kept), `ring.enabled`
+    = false (portraits are cinematic images with transparency; they must not use a ring).
+  - Never change `width`/`height` (grid footprint).
+- **Ring subject texture:** never modified by this module. If a token has an explicit
+  `ring.subject.texture`, it intentionally overrides the token image inside the ring.
+- **Permissions:** only update documents the user can update (`canUserModify(game.user,
+  "update")`); skip others with a warning. Check `game.user.can("FILES_BROWSE")` before
+  browsing.
+- **Picker window:** one per actor (window id `portrait_picker-<actorId>`); opening it again
+  calls `bringToFront()` on the existing one (found via `foundry.applications.instances`).
+- **Picker preselect:** Portrait if the actor's linked token on the current scene has
+  `flags.portrait_picker.mode === "portrait"`, otherwise Token.
+
+## Key API findings
+### dnd5e 5.3.3 (tag release-5.3.3)
+- Default sheets (`dnd5e.mjs` ~153–177): character → `CharacterActorSheet`, npc →
+  `NPCActorSheet`, vehicle → `VehicleActorSheet`, group → `GroupActorSheet`, encounter →
+  `EncounterActorSheet`. All extend `BaseActorSheet`
+  (`module/applications/actor/api/base-actor-sheet.mjs`), which extends
+  `foundry.applications.sheets.ActorSheetV2`. All five show a portrait.
+- Portrait markup: `templates/actors/character-sidebar.hbs`, `npc-header.hbs`,
+  `vehicle/sidebar.hbs`, `group/header.hbs`, `encounter/header.hbs`. `<img>` inside
+  `div.portrait` with `data-action="editImage"` (only if editable, else `showArtwork`) and
+  `data-edit="img"` (or `prototypeToken.texture.src` when the sheet's Token/Portrait toggle
+  `flags.dnd5e.showTokenPortrait` is on). If the token uses random wildcard images the action
+  is `configurePrototypeToken` — we leave that alone.
+- Click handler: `editImage` → `module/applications/api/primary-sheet-mixin.mjs:22` →
+  `_onEditImage` in `module/applications/api/application-v2-mixin.mjs:327`, which does
+  `new foundry.applications.apps.FilePicker.implementation({...}).browse()`.
+- Ring scale: `module/documents/token.mjs` `prepareData()` multiplies the SOURCE
+  `texture.scaleX/Y` by `CONFIG.DND5E.actorSizes[size].dynamicTokenScale` when the ring is on
+  (only `sm` defines it: 0.8). Grid footprint comes from `actorSizes[size].token`.
+### Foundry v14 API (https://foundryvtt.com/api/, checked against 14.365 docs)
+- `foundry.applications.apps.FilePicker.implementation`; static
+  `browse(source, target, { bucket, extensions, wildcard })` → Promise of `{ dirs, files, target, ... }`.
+- `foundry.applications.instances`: `Map` of rendered ApplicationV2 windows by id.
+  ApplicationV2 has `bringToFront()`, `rendered`, `close()`. Action handlers are static
+  functions where `this` is the window (same pattern dnd5e uses).
+- `foundry.applications.api.ApplicationV2` + `HandlebarsApplicationMixin` (`static PARTS`,
+  `DEFAULT_OPTIONS` with `id, classes, window, position, actions`, `_prepareContext`, `_onRender`).
+- Render hooks: `render{ClassName}` for each class in the inheritance chain, args
+  `(application, element, context, options)`.
+- `ActorSheetV2`: `actor`, `token` (unlinked token sheets only), `isEditable`.
+- `Actor`: `img`, `prototypeToken`, `isToken`, `getDependentTokens({ scenes, linked })`,
+  `testUserPermission`, `getFlag/setFlag/unsetFlag`.
+- `TokenDocument`: `texture { src, scaleX, scaleY }`, `ring { enabled, subject { texture, scale } }`,
+  `actorLink`, `width/height` (plus v14 `depth`, `level`), `canUserModify`, `isOwner`.
+- `game.settings.register(ns, key, { name, hint, scope: world|client|user, config, type,
+  default, range, restricted, onChange, requiresReload })`.
+- `User`: `isGM`, `character`, `can(action)`. `CONST.USER_PERMISSIONS.FILES_BROWSE` and
+  `TOKEN_CONFIGURE` exist.
+
+## Phase status
+1. Skeleton (module.json, settings, logger, lang, CLAUDE.md, README) — DONE, tested by user
+2. Click hook + placeholder window — DONE, tested by user (incl. as a Trusted Player)
+3. Real folder browsing — DONE, tested by user (GM and Trusted Player)
+4. Actor + prototype token update, remember folder — DONE, tested by user (v0.4.0).
+   Open question: user saw no `portrait_picker` console lines while testing Phase 4 (all
+   behaviour worked). Check debug setting / browser console level filters in Phase 5.
+5. Scene tokens + Token/Portrait scale + rings (verify TOKEN_CONFIGURE doesn't block players)
+   + GitHub release workflow (moved here from Phase 6) + version 0.5.0
+6. Polish, README
+
+## Release
+Manifest URL: `https://github.com/crescens/portrait_picker/releases/latest/download/module.json`.
+The repo goes public after Phase 4; the manifest URL only works once a release exists.

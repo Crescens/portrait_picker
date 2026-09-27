@@ -1,0 +1,38 @@
+{
+  "PORTRAIT_PICKER": {
+    "Settings": {
+      "Enabled": {
+        "Name": "Use Portrait Picker on my sheets",
+        "Hint": "When on, clicking an actor's portrait opens the Portrait Picker. Shift+click always opens Foundry's standard file picker."
+      },
+      "PortraitScale": {
+        "Name": "Portrait mode image scale",
+        "Hint": "How many times larger a token's image is drawn in Portrait mode. The token still takes up its normal grid space."
+      },
+      "Debug": {
+        "Name": "Debug logging",
+        "Hint": "Print extra 'portrait_picker |' messages to the browser console (F12) to help with troubleshooting."
+      }
+    },
+    "Picker": {
+      "Title": "Portrait Picker: {name}",
+      "Up": "Up one folder",
+      "Filter": "Filter by name",
+      "Current": "Current",
+      "Empty": "No folders or images here.",
+      "Confirm": "Confirm",
+      "Cancel": "Cancel"
+    },
+    "Errors": {
+      "OpenFailed": "Portrait Picker could not open. Press F12 and check the Console for details.",
+      "NoFolder": "Portrait Picker: couldn't open any image folder, not even \"assets\". Check that Data/assets exists on the server.",
+      "ActorUpdateFailed": "Portrait Picker: couldn't save the new image for \"{name}\". Press F12 and check the Console for details."
+    },
+    "Warnings": {
+      "FolderMissing": "Portrait Picker: couldn't open the folder \"{missing}\", so it's showing \"{shown}\" instead. Check the folder exists and its name matches exactly (including capital letters).",
+      "FolderUnreadable": "Portrait Picker: couldn't open the folder \"{folder}\". It may have been moved or deleted.",
+      "NoBrowsePermission": "Portrait Picker: you don't have the \"Use File Browser\" permission. Ask your GM to enable it.",
+      "NoActorPermission": "Portrait Picker: you don't have permission to change \"{name}\"."
+    }
+  }
+}

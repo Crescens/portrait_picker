@@ -1,0 +1,131 @@
+/*
+ * portrait-picker.css
+ * Styles for the Portrait Picker window. Every rule starts with
+ * ".portrait-picker" (the window's class) so it can't affect anything else
+ * in Foundry.
+ */
+
+/* Stack toolbar, grid and buttons top to bottom, filling the window. */
+.portrait-picker .portrait-picker-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+}
+
+/* ---------- Top bar ---------- */
+
+.portrait-picker .portrait-picker-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portrait-picker .portrait-picker-up {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+/* Long folder paths are cut off with "..." instead of pushing things aside. */
+.portrait-picker .portrait-picker-folder {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.portrait-picker .portrait-picker-filter {
+  flex: 0 0 12rem;
+}
+
+/* ---------- Grid of tiles ---------- */
+
+/* The grid takes all the leftover height and scrolls on its own. */
+.portrait-picker .portrait-picker-grid {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  grid-auto-rows: min-content;
+  gap: 0.5rem;
+  padding: 2px;
+}
+
+.portrait-picker .portrait-picker-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  height: auto;
+  padding: 0.25rem;
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+
+/* Our tiles use "display: flex", which would beat the browser's built-in
+   rule for the "hidden" attribute. This puts hiding back for the filter box. */
+.portrait-picker .portrait-picker-tile[hidden] {
+  display: none;
+}
+
+.portrait-picker .portrait-picker-tile img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  border: none;
+}
+
+.portrait-picker .portrait-picker-tile.folder i {
+  font-size: 3rem;
+  line-height: 100px;
+}
+
+.portrait-picker .portrait-picker-name {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.8rem;
+}
+
+/* The actor's current image: dashed outline and a small label. */
+.portrait-picker .portrait-picker-tile.current {
+  border-style: dashed;
+  border-color: var(--color-border-highlight, #ff6400);
+}
+
+.portrait-picker .portrait-picker-badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  padding: 0 4px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  background: var(--color-border-highlight, #ff6400);
+  color: white;
+}
+
+/* The image the user clicked: solid outline. */
+.portrait-picker .portrait-picker-tile.selected {
+  border-style: solid;
+  border-color: var(--color-border-highlight, #ff6400);
+  box-shadow: 0 0 6px var(--color-border-highlight, #ff6400);
+}
+
+.portrait-picker .portrait-picker-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-style: italic;
+}
+
+/* ---------- Bottom buttons ---------- */
+
+.portrait-picker .portrait-picker-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.portrait-picker .portrait-picker-buttons button {
+  flex: 1;
+}
