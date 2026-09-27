@@ -226,7 +226,7 @@ lang/en.json                 all user-facing strings
 - Keep the README "Changelog" section updated with every release.
 
 ## Release
-Manifest URL: `https://github.com/crescens/portrait_picker/releases/latest/download/module.json`.
+Manifest URL: `https://github.com/Crescens/portrait_picker/releases/latest/download/module.json`.
 The repo is public. `.github/workflows/release.yml` runs on `release: published`: tag
 `vX.Y.Z` → version `X.Y.Z` (rejects other formats); `jq` writes version/manifest/download
 (built from `github.repository`) into module.json; zips `module.json README.md scripts styles

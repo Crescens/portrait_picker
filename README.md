@@ -22,7 +22,7 @@ In Foundry's setup screen: **Add-on Modules → Install Module**, paste this Man
 click **Install**:
 
 ```
-https://github.com/crescens/portrait_picker/releases/latest/download/module.json
+https://github.com/Crescens/portrait_picker/releases/latest/download/module.json
 ```
 
 Then open your world, go to **Game Settings → Manage Modules**, and enable **Portrait Picker**.
