@@ -227,23 +227,39 @@ export class PortraitPickerApp extends HandlebarsApplicationMixin(ApplicationV2)
       });
     }
 
-    // Paste (Ctrl+V). Only images are handled; pasting text (for example
-    // into the filter box) works as normal.
+    // Paste (Ctrl+V).
+    // WHY the filter box matters: Foundry uses Ctrl+V as its own shortcut
+    // ("paste copied tokens") whenever the keyboard focus is NOT in a text
+    // box, and that stops the browser's normal paste from happening at all.
+    // Foundry leaves Ctrl+V alone while a text box has focus, so we make sure
+    // the filter box has focus when Ctrl+V is pressed. The paste then happens
+    // in the filter box and bubbles up to the listener below.
+    const filterInput = this.element.querySelector(".portrait-picker-filter");
+    body.addEventListener("keydown", (event) => {
+      const isPasteKey = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "v";
+      if (isPasteKey && filterInput && document.activeElement !== filterInput) {
+        filterInput.focus({ preventScroll: true });
+      }
+    });
+
+    // Only images are handled; pasting text into the filter box works as normal.
     body.addEventListener("paste", (event) => {
-      const files = event.clipboardData ? Array.from(event.clipboardData.files) : [];
+      const files = getClipboardFiles(event.clipboardData);
       if (files.length === 0) {
         return;
       }
-      // Stop here, so nothing else in Foundry (like the canvas) also reacts
-      // to this paste.
+      // Stop here, so the image isn't also pasted as text into the filter
+      // box, and nothing else in Foundry reacts to this paste.
       event.preventDefault();
       event.stopPropagation();
       this.handleNewFiles(files);
     });
 
-    // Put the keyboard focus on the grid, so Ctrl+V works straight away
-    // without clicking into the window first.
-    grid.focus({ preventScroll: true });
+    // Start with the keyboard focus in the filter box, so typing filters and
+    // Ctrl+V pastes straight away, without clicking into the window first.
+    if (filterInput) {
+      filterInput.focus({ preventScroll: true });
+    }
   }
 
   /**
@@ -375,6 +391,37 @@ export class PortraitPickerApp extends HandlebarsApplicationMixin(ApplicationV2)
     log.debug("Cancel clicked.");
     this.close();
   }
+}
+
+/**
+ * The files (images) on the clipboard, if any.
+ * Browsers offer pasted files in two places: clipboardData.files, and as
+ * "items" whose kind is "file". Some browsers fill only one of them, so we
+ * check both.
+ * @param {DataTransfer|null} clipboardData
+ * @returns {File[]}
+ */
+function getClipboardFiles(clipboardData) {
+  if (!clipboardData) {
+    log.debug("Paste: no clipboard data.");
+    return [];
+  }
+  log.debug("Paste: clipboard holds", Array.from(clipboardData.types));
+
+  const files = Array.from(clipboardData.files);
+  if (files.length > 0) {
+    return files;
+  }
+
+  for (const item of clipboardData.items) {
+    if (item.kind === "file") {
+      const file = item.getAsFile();
+      if (file) {
+        files.push(file);
+      }
+    }
+  }
+  return files;
 }
 
 // Actors whose picker is still being opened (reading the starting folder

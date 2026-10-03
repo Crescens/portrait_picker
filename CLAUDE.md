@@ -179,9 +179,18 @@ LICENSE                      MIT, "Copyright (c) 2026 Crescens" (shipped in the 
   - Listeners live on `.portrait-picker-body` (rebuilt each render, so no duplicates):
     dragover (only when `dataTransfer.types` includes "Files") / dragleave / drop; hidden
     `<input type=file multiple>` opened by the `upload` action; `paste` (only when the
-    clipboard holds files; `stopPropagation` so the canvas doesn't also react). The grid has
-    `tabindex="0"` and is focused after each render so Ctrl+V works immediately. Thumbnails
-    are `draggable="false"` so dragging a tile isn't mistaken for a file drop.
+    clipboard holds files; `stopPropagation` so nothing else reacts). Thumbnails are
+    `draggable="false"` so dragging a tile isn't mistaken for a file drop.
+  - PASTE (0.7.1 fix): 0.7.0 focused the grid (`tabindex="0"`) and paste never fired in the
+    user's browser (tested from a web page, Discord, and a copied .png file). Cause: Foundry's
+    KeyboardManager handles Ctrl+V as its core "paste objects" keybinding unless focus is in
+    a text field (v14 docs: `hasFocus` = input/select/textarea, contentEditable, a
+    `data-keyboard-focus="true"` element, or a button inside a form), which stops the
+    browser's native paste. Fix: focus the FILTER `<input>` after each render, and a body
+    `keydown` listener moves focus to the filter input when Ctrl/Cmd+V is pressed elsewhere in
+    the picker (focus change before the default action redirects the paste). Files are read
+    from `clipboardData.files`, falling back to `clipboardData.items` (kind "file");
+    `log.debug` prints `clipboardData.types` on each paste.
   - After upload: re-browse the folder and select the last uploaded file (`goToFolder(folder,
     selectPath)`); `this.uploading` blocks overlapping uploads.
   - README has a Permissions section warning that Upload New Files is not limited to a
@@ -243,7 +252,8 @@ LICENSE                      MIT, "Copyright (c) 2026 Crescens" (shipped in the 
 
 ## Stretch goals
 - 0.7.0: upload via drag-and-drop, Upload button and paste; MIT license; author name
-  "Crescens" everywhere — awaiting user test.
+  "Crescens" everywhere — released; upload button, drag-and-drop and no-overwrite tested OK,
+  paste failed → 0.7.1 fix awaiting user test (remaining 0.7.0 test steps 5–10 too).
 - Later / lower priority (user's call): keyboard navigation, double-click to confirm, updating
   tokens on all scenes. Going to 1.0.0 is the user's decision.
 

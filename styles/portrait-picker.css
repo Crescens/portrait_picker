@@ -69,14 +69,6 @@
   outline-offset: -2px;
 }
 
-/* The grid can hold keyboard focus (for paste); no extra focus ring needed. */
-.portrait-picker .portrait-picker-grid:focus {
-  outline: none;
-}
-.portrait-picker .portrait-picker-grid.drag-over:focus {
-  outline: 2px dashed var(--color-border-highlight, #ff6400);
-}
-
 .portrait-picker .portrait-picker-upload {
   flex: 0 0 auto;
   width: auto;
