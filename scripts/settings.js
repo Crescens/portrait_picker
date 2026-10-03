@@ -45,6 +45,15 @@ export function registerSettings() {
     default: 6
   });
 
+  // Hidden: remembers that saved data from the old "portrait_picker" id has
+  // already been moved to the new id, so migration.js only does it once.
+  game.settings.register(MODULE_ID, "oldDataMigrated", {
+    scope: "world",
+    config: false,
+    type: Boolean,
+    default: false
+  });
+
   // Extra console messages for troubleshooting. "client" scope because it's
   // about this one browser's console, and nobody else needs to see it.
   game.settings.register(MODULE_ID, "debug", {

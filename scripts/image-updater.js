@@ -15,7 +15,7 @@ import { MODULE_ID } from "./constants.js";
 import * as log from "./logger.js";
 
 // The two ways a scene token can be drawn. Stored on each token in
-// flags.portrait_picker.mode so the picker can preselect it next time.
+// flags.portrait-picker.mode so the picker can preselect it next time.
 export const MODE_TOKEN = "token";
 export const MODE_PORTRAIT = "portrait";
 

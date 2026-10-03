@@ -9,7 +9,7 @@
 #   4. Attaches module.json and module.zip to the release.
 #
 # Foundry then installs/updates from:
-#   https://github.com/<owner>/portrait_picker/releases/latest/download/module.json
+#   https://github.com/<owner>/<repository>/releases/latest/download/module.json
 # "latest" means the newest published release that is NOT marked as a pre-release.
 
 name: Release

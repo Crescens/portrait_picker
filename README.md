@@ -12,6 +12,8 @@ Choose one and the module updates, all at once:
 
 Tokens on other scenes and unlinked tokens are not changed.
 
+![The Portrait Picker window showing a folder of expression images, with the current image highlighted](docs/picker.png)
+
 ## Requirements
 - Foundry VTT v14 (verified on build 367)
 - D&D 5e system 5.3.3 or later, using its **default** actor sheets (not legacy sheets, not Tidy 5e)
@@ -28,6 +30,21 @@ https://github.com/Crescens/portrait_picker/releases/latest/download/module.json
 
 Then open your world, go to **Game Settings → Manage Modules**, and enable **Portrait Picker**.
 To update later, use **Check for Updates** on the Add-on Modules screen.
+
+### Upgrading from 0.7.x or earlier
+Version 1.0.0 changed the module's id from `portrait_picker` to `portrait-picker` (Foundry asks
+for hyphens in ids). Foundry treats it as a new module, so upgrade once by hand:
+
+1. In **Add-on Modules**, uninstall the old **Portrait Picker** (0.7.x).
+2. Install 1.0.0 with the Manifest URL above, and enable it in your world.
+3. Load the world as **GM** once. The module moves its saved data (remembered folders,
+   Token/Portrait modes and ring settings) to the new id automatically and tells you how many
+   actors and tokens it updated. Your world's other data is not affected.
+4. Check **Portrait mode image scale** in the module settings if you had changed it from 6;
+   settings start fresh under the new id. Each player's **Use Portrait Picker on my sheets** is
+   on by default.
+
+If the old version is still enabled, the GM sees a warning until it's turned off.
 
 ## Usage
 
@@ -48,7 +65,8 @@ add images from their computer straight into the folder the picker is showing:
 - **Drag and drop** one or more image files from your computer onto the picker window.
 - Click **Upload** to choose files with your computer's normal file chooser.
 - **Paste** an image with **Ctrl+V** (Cmd+V on Mac), for example straight after copying it from
-  an image generator. Pasted images are named like `pasted-2026-09-27-153045.png`.
+  an image generator. Pasted images are named like `pasted-2026-09-27-153045.png`. Pasting a
+  copied GIF saves a still image of its first frame (browsers copy GIFs as still images).
 
 The newest upload is selected automatically, so you can click **Confirm** right away. Only
 `.png`, `.jpg`, `.jpeg` and `.webp` files are accepted. Existing files are never replaced: if
@@ -88,7 +106,7 @@ Found under **Game Settings → Configure Settings → Portrait Picker**.
 |---|---|---|---|
 | Use Portrait Picker on my sheets | each user | On | Turn off to get Foundry's standard file picker when you click a portrait. |
 | Portrait mode image scale | GM only | 6 | How many times larger the token image is drawn in Portrait mode. |
-| Debug logging | each browser | Off | Prints extra `portrait_picker \|` messages in the browser console (F12). |
+| Debug logging | each browser | Off | Prints extra `portrait-picker \|` messages in the browser console (F12). |
 
 ## Permissions
 Portrait Picker only does what a user's Foundry permissions allow. Set these in
@@ -140,7 +158,8 @@ assets/
 | Clicking the portrait opens Foundry's normal file picker | Shift was held, **Use Portrait Picker on my sheets** is off, or it's an **unlinked** token's sheet (those always use the standard picker). |
 | A token on the scene didn't change | It's unlinked, it's on a different scene from the one you're viewing, or you don't have permission to change it (you'll see a yellow message). |
 | The ring shows a different picture than the one chosen | The token's ring has its own **Subject Texture** set, which Foundry shows instead. Clear it in the token's settings. |
-| No `portrait_picker` lines in the console | Turn on **Debug logging**, and make sure the console's **Logs** level is shown. `portrait_picker \| Ready.` always appears on page load. |
+| No `portrait-picker` lines in the console | Turn on **Debug logging**, and make sure the console's **Logs** level is shown. `portrait-picker \| Ready.` always appears on page load. |
+| Clicking a portrait opens two pickers, or a warning says the old version is on | The pre-1.0.0 version (id `portrait_picker`) is still enabled. Disable and uninstall it (see [Upgrading](#upgrading-from-07x-or-earlier)). |
 
 ## Known limitations
 - Only the dnd5e default actor sheets are supported.
@@ -159,6 +178,9 @@ assets/
 modules, as long as the copyright notice is kept.
 
 ## Changelog
+- **1.0.0**: First stable release, listed on Foundry's package directory. Module id renamed
+  from `portrait_picker` to `portrait-picker` (one-time reinstall; saved data migrates
+  automatically). README screenshot, upgrade notes and GIF-paste note.
 - **0.7.1**: Fix pasting images with Ctrl+V. Foundry's own Ctrl+V shortcut was taking the
   keypress before the picker saw it.
 - **0.7.0**: Add images from your computer by drag-and-drop, an Upload button or paste
@@ -179,9 +201,9 @@ Releases are built automatically by a GitHub Actions workflow
 1. Make sure the code you want to release is on the branch you'll release from (normally
    `main`).
 2. On GitHub, open the repository → **Releases** → **Draft a new release**.
-3. **Choose a tag** → type a new tag like `v0.7.1` → **Create new tag on publish**. Set
+3. **Choose a tag** → type a new tag like `v1.0.0` → **Create new tag on publish**. Set
    **Target** to the branch from step 1.
-4. Give it a title (e.g. `v0.7.1`) and a short description of what changed.
+4. Give it a title (e.g. `v1.0.0`) and a short description of what changed.
 5. Leave **Set as a pre-release** unticked (Foundry's manifest link only follows normal
    releases), then click **Publish release**.
 6. Open the repository's **Actions** tab: a **Release** run appears and should finish with a
@@ -190,5 +212,40 @@ Releases are built automatically by a GitHub Actions workflow
 7. In Foundry's setup screen → **Add-on Modules**, click **Check for Updates** (or install
    with the manifest URL the first time).
 
-The workflow takes the version from the tag (`v0.7.1` → `0.7.1`) and writes it, plus the
+The workflow takes the version from the tag (`v1.0.0` → `1.0.0`) and writes it, plus the
 correct download link, into the released `module.json`, so the tag is what counts.
+
+Version numbers: a bug fix bumps the last number (1.0.0 → 1.0.1), a new feature the middle one
+(1.0.1 → 1.1.0).
+
+## Listing on Foundry's package directory (for the maintainer)
+Being listed lets other groups find the module by searching in Foundry's **Install Module**
+window. Listing needs an active Foundry VTT license owner.
+
+**First time only:**
+1. Publish the GitHub release first (above), so the release's manifest link exists.
+2. Log in at [foundryvtt.com](https://foundryvtt.com), open **Systems and Modules**
+   (<https://foundryvtt.com/packages/>), and use the **package submission** link at the bottom
+   of that page.
+3. Fill in the form:
+   - **Package Name**: `portrait-picker` (must exactly match the `id` in `module.json`).
+   - **Package Title**: `Portrait Picker`.
+   - **Package URL**: `https://github.com/Crescens/portrait_picker`.
+   - Description: the first paragraph of this README works well.
+4. Foundry staff review the request, usually within a few days, and then give you access to the
+   package's admin page.
+5. On the admin page, fill in the description, tags (e.g. *dnd5e*, *tokens*, *art*), and add
+   images (`docs/picker.png` is a good screenshot).
+
+**Every release (after the GitHub release):** on the package admin page, add a new version:
+- **Version**: e.g. `1.0.0`.
+- **Manifest URL**: the manifest of **that specific** release, e.g.
+  `https://github.com/Crescens/portrait_picker/releases/download/v1.0.0/module.json`
+  (not the `latest` link).
+- **Release notes URL**: the release's GitHub page, e.g.
+  `https://github.com/Crescens/portrait_picker/releases/tag/v1.0.0`.
+- **Compatibility**: minimum `14`, verified `14.367`.
+
+Foundry also offers a Package Release API (a token on the admin page) that the GitHub workflow
+could use to do this step automatically; see
+<https://foundryvtt.com/article/package-release-api/>.
