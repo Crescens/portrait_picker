@@ -278,11 +278,33 @@ LICENSE                      MIT, "Copyright (c) 2026 Crescens" (shipped in the 
   user-provided, generic test art), upgrade notes, GIF-paste note, "Listing on Foundry's
   package directory" maintainer section, `readme`/`changelog` URLs in module.json. No `media`
   entry: the v14 docs only document type `setup` (setup-screen background), so images go on
-  the Foundry package admin page instead. Awaiting user test + package submission (the user
-  must submit the form; needs a Foundry license owner).
+  the Foundry package admin page instead. RELEASED (v1.0.0) and in use by the user's group;
+  package submission ON HOLD (see below).
 - Listing per release: admin page needs the RELEASE-SPECIFIC manifest URL
   (`…/releases/download/vX.Y.Z/module.json`), notes URL, compatibility min 14 / verified 14.367.
   Optional future: automate via the Package Release API (`fvttp_` token as a GitHub secret).
+
+## Foundry package listing: ON HOLD (user decision)
+- 1.0.0 is released on GitHub and used by the user's own group. Listing on foundryvtt.com is
+  on hold because of Foundry's AI Content Policy (https://foundryvtt.com/article/ai-policy/,
+  revised 2026-03-18). Do not push the user toward listing; they'll raise it if they want it.
+- Policy points that matter for this package:
+  - Code: AI-assisted code is allowed, but the author must "understand, explain, modify, and
+    maintain every part" of it and attest to that at submission.
+  - Prepared text must be human-made: "rules, lore, adventure content, journal entries, item
+    descriptions, UI labels". Package descriptions on foundryvtt.com "must be human-written".
+    `lang/en.json` strings and the `module.json` description were written by Claude → the user
+    would have to rewrite them; README is a grey area (shipped in the zip and linked) → treat
+    as needing the user's own words. AI may only proofread/format human-authored text.
+  - Listing images must not be AI-generated (unconfirmed whether the test portraits in
+    `docs/picker.png` are).
+  - No disclosure label needed for ordinary AI assistance ("Zero AI" can't be claimed); no
+    "AI Tools" tag needed (the module generates nothing at runtime).
+- If the user resumes: give them a worksheet of string keys + where each appears + what it
+  must convey (NOT suggested wording); they write the text; Claude proofreads and wires it in;
+  release as a patch version; then they submit (Package Type `module`, Package ID
+  `portrait-picker`, Package Title `Portrait Picker`, Package URL the GitHub repo, their
+  Foundry Discord username — never commit that username).
 
 ## Stretch goals
 - 0.7.0: upload via drag-and-drop, Upload button and paste; MIT license; author name
