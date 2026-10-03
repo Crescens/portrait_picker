@@ -11,6 +11,7 @@
 import { LOG_PREFIX } from "./constants.js";
 import { registerSettings } from "./settings.js";
 import { registerSheetHook } from "./sheet-hook.js";
+import { migrateOldData } from "./migration.js";
 import * as log from "./logger.js";
 
 Hooks.once("init", () => {
@@ -26,4 +27,7 @@ Hooks.once("ready", () => {
   // confirm the module loaded, even with debug logging off.
   console.log(LOG_PREFIX, "Ready.");
   log.debug("Debug logging is ON.");
+
+  // One-time move of saved data from the pre-1.0.0 module id (GM only).
+  migrateOldData();
 });

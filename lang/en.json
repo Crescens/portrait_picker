@@ -11,7 +11,7 @@
       },
       "Debug": {
         "Name": "Debug logging",
-        "Hint": "Print extra 'portrait_picker |' messages to the browser console (F12) to help with troubleshooting."
+        "Hint": "Print extra 'portrait-picker |' messages to the browser console (F12) to help with troubleshooting."
       }
     },
     "Picker": {
@@ -37,7 +37,8 @@
       "OpenFailed": "Portrait Picker could not open. Press F12 and check the Console for details.",
       "NoFolder": "Portrait Picker: couldn't open any image folder, not even \"assets\". Check that Data/assets exists on the server.",
       "ActorUpdateFailed": "Portrait Picker: couldn't save the new image for \"{name}\". Press F12 and check the Console for details.",
-      "UploadFailed": "Portrait Picker: couldn't upload \"{name}\". It may be too large for your server. Press F12 and check the Console for details."
+      "UploadFailed": "Portrait Picker: couldn't upload \"{name}\". It may be too large for your server. Press F12 and check the Console for details.",
+      "MigrationFailed": "Portrait Picker: couldn't move saved data from the old version. It will try again next time the world loads. Press F12 and check the Console for details."
     },
     "Warnings": {
       "FolderMissing": "Portrait Picker: couldn't open the folder \"{missing}\", so it's showing \"{shown}\" instead. Check the folder exists and its name matches exactly (including capital letters).",
@@ -48,7 +49,11 @@
       "TokenUpdateFailed": "Portrait Picker: couldn't update the token \"{name}\" on this scene. Press F12 and check the Console for details.",
       "NoUploadPermission": "Portrait Picker: you don't have the \"Upload New Files\" permission, so images can't be added here. Ask your GM.",
       "UploadNeedsFolder": "Portrait Picker: open a folder first (for example your assets folder) before adding images.",
-      "NotAnImage": "Portrait Picker: \"{name}\" was skipped. Only .png, .jpg, .jpeg and .webp images can be added."
+      "NotAnImage": "Portrait Picker: \"{name}\" was skipped. Only .png, .jpg, .jpeg and .webp images can be added.",
+      "OldModuleActive": "Portrait Picker: the old version (0.7.x, id \"portrait_picker\") is still turned on. Turn it off in Manage Modules and uninstall it, or both versions will react to portrait clicks."
+    },
+    "Migration": {
+      "Done": "Portrait Picker: moved saved data from the old version for {actors} actor(s) and {tokens} token(s)."
     }
   }
 }

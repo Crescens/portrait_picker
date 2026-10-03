@@ -23,7 +23,7 @@ controls how scene tokens are drawn (see Scale rules).
 - When writing player-permission tests, test as a Trusted Player, not the GM (GM has more
   permissions and would hide problems).
 - Dev builds before a release exists: download the branch ZIP from GitHub and upload the folder
-  (renamed `portrait_picker`) to `Data/modules/` on the server.
+  (renamed `portrait-picker`, matching the module id) to `Data/modules/` on the server.
 
 ## Privacy rules (the repo is public)
 - NEVER commit real player/user names, the hosting provider's name, IP addresses, server
@@ -31,8 +31,28 @@ controls how scene tokens are drawn (see Scale rules).
 - Do not put Claude session links in commit messages (omit the `Claude-Session:` trailer).
 - Before each push, grep for the above.
 
+## Module id (renamed in 1.0.0)
+- id is **`portrait-picker`** (hyphen). Foundry's module guide: ids "must be an all lower-case
+  string with no special characters and should use hyphens (not underscores)". Up to 0.7.1 it
+  was `portrait_picker`; renamed before listing on Foundry's package directory.
+- The GitHub repo is still `Crescens/portrait_picker` (URLs unchanged). Lang keys stay
+  `PORTRAIT_PICKER.*`; CSS classes were always `portrait-picker-*`.
+- `constants.js`: `MODULE_ID = "portrait-picker"`, `OLD_MODULE_ID = "portrait_picker"`,
+  `LOG_PREFIX = "portrait-picker |"`.
+- `migration.js` (`migrateOldData`, called on `ready`): GM only, and only the
+  `game.users.activeGM`; runs once per world (hidden world setting `oldDataMigrated`). Copies
+  `_source.flags.portrait_picker` → `flags.portrait-picker` on all world actors
+  (`Actor.implementation.updateDocuments`) and all tokens on all scenes
+  (`scene.updateEmbeddedDocuments("Token", …)`). Reads `_source` because `getFlag()` rejects
+  scopes of inactive packages. Old flags are left in place (harmless). On error the setting
+  isn't saved, so it retries next load. If the old module is still active, the GM gets a
+  permanent warning every load. Settings are NOT migrated (user re-checks portraitScale).
+- Upgrading users must uninstall 0.7.x and install 1.0.0 (README "Upgrading from 0.7.x").
+
 ## Versioning
-- Each phase bumps `module.json` `version` to `0.<phase>.0` (Phase 5 → 0.5.0) and the
+- From 1.0.0 on (semantic versioning): bug fix → patch (1.0.0 → 1.0.1), new feature → minor
+  (1.0.1 → 1.1.0). Update `module.json` version/download and the README Changelog each time.
+- Before 1.0.0: each phase bumped `module.json` `version` to `0.<phase>.0` (Phase 5 → 0.5.0) and the
   `download` URL to the matching `v0.<phase>.0` tag. Fixes within a phase bump the patch
   number (0.5.0 → 0.5.1). After Phase 6 the user decides on stretch
   goals and when to go to 1.0.0.
@@ -45,7 +65,7 @@ controls how scene tokens are drawn (see Scale rules).
   Avoid clever one-liners and advanced JS features when a simpler version works.
 - Small files, each with a short header comment explaining its purpose.
 - All user-facing text lives in `lang/en.json` (keys under `PORTRAIT_PICKER.*`).
-- Console logging uses the prefix `portrait_picker |` (see `scripts/logger.js`);
+- Console logging uses the prefix `portrait-picker |` (see `scripts/logger.js`);
   `log.debug()` only prints when the "Debug logging" client setting is on.
 - Friendly `ui.notifications` messages instead of silent failures.
 - Work in small phases. After EVERY phase stop and wait for approval, and give:
@@ -57,7 +77,7 @@ controls how scene tokens are drawn (see Scale rules).
 
 ## File layout
 ```
-module.json                  manifest (id portrait_picker)
+module.json                  manifest (id portrait-picker)
 scripts/main.js              entry point; init/ready hooks
 scripts/constants.js         MODULE_ID, LOG_PREFIX
 scripts/logger.js            debug/warn/error console helpers
@@ -67,6 +87,8 @@ scripts/folders.js           owner lookup, start folder, safe browse, path helpe
 scripts/picker-app.js        the picker window (ApplicationV2 + Handlebars)
 scripts/image-updater.js     actor, prototype, scene-token updates; Token/Portrait modes
 scripts/uploader.js          uploads (drag-and-drop, Upload button, paste) into a folder
+scripts/migration.js         one-time move of saved data from the old id (portrait_picker)
+docs/picker.png              screenshot for README / Foundry listing (not shipped in the zip)
 templates/picker.hbs         picker HTML
 styles/portrait-picker.css   picker styles
 lang/en.json                 all user-facing strings
@@ -80,12 +102,13 @@ LICENSE                      MIT, "Copyright (c) 2026 Crescens" (shipped in the 
 | `enabled` | user | true | "Use Portrait Picker on my sheets" |
 | `portraitScale` | world, restricted | 6 | Portrait-mode texture multiplier, range 1–10 step 0.5 |
 | `debug` | client | false | Enables `log.debug` output |
+| `oldDataMigrated` | world, hidden | false | Set true once `migration.js` has run |
 
 ## Flags
-- `flags.portrait_picker.lastFolder` (Actor): folder the actor's image was last chosen from.
-- `flags.portrait_picker.mode` (scene TokenDocument): `"token"` or `"portrait"`. Never set on
+- `flags.portrait-picker.lastFolder` (Actor): folder the actor's image was last chosen from.
+- `flags.portrait-picker.mode` (scene TokenDocument): `"token"` or `"portrait"`. Never set on
   the prototype token, so freshly placed tokens have no flag and the picker preselects Token.
-- `flags.portrait_picker.ringBeforePortrait` (scene TokenDocument): boolean, the token's
+- `flags.portrait-picker.ringBeforePortrait` (scene TokenDocument): boolean, the token's
   `ring.enabled` saved when ENTERING Portrait mode (not overwritten portrait→portrait);
   restored on Portrait→Token. Left in place afterwards (harmless; overwritten next time).
 
@@ -124,7 +147,7 @@ LICENSE                      MIT, "Copyright (c) 2026 Crescens" (shipped in the 
 - **Saving (Phase 4, `image-updater.js` `applyImageToActor`):** checks
   `actor.canUserModify(game.user, "update")`, then ONE `actor.update()` with dotted keys:
   `img`, `prototypeToken.texture.src`, `prototypeToken.texture.scaleX/Y` (1, sign kept via
-  `keepSign`), `flags.portrait_picker.lastFolder` (the picker's current folder). Returns
+  `keepSign`), `flags.portrait-picker.lastFolder` (the picker's current folder). Returns
   true/false; on failure the picker stays open and Confirm is re-enabled. dnd5e's
   `getPreferredArtwork` cache is cleared by `_clearCachedValues` on data prep, so the sheet
   shows the new image without extra work.
@@ -160,10 +183,10 @@ LICENSE                      MIT, "Copyright (c) 2026 Crescens" (shipped in the 
 - **Permissions:** only update documents the user can update (`canUserModify(game.user,
   "update")`); skip others with a warning. Check `game.user.can("FILES_BROWSE")` before
   browsing.
-- **Picker window:** one per actor (window id `portrait_picker-<actorId>`); opening it again
+- **Picker window:** one per actor (window id `portrait-picker-<actorId>`); opening it again
   calls `bringToFront()` on the existing one (found via `foundry.applications.instances`).
 - **Picker preselect:** Portrait if the actor's linked token on the current scene has
-  `flags.portrait_picker.mode === "portrait"`, otherwise Token.
+  `flags.portrait-picker.mode === "portrait"`, otherwise Token.
 - **Uploads (0.7.0, `uploader.js` + `picker-app.js` `activateUploads`/`handleNewFiles`):**
   - Needs `game.user.can("FILES_UPLOAD")` ("Upload New Files"; Foundry default role is
     Assistant GM, the user granted it to Trusted Player). Without it the Upload button and
@@ -250,12 +273,27 @@ LICENSE                      MIT, "Copyright (c) 2026 Crescens" (shipped in the 
 6. Polish (0.6.0): code review pass (no bugs found), no-tokens note in the picker, README
    rewritten (troubleshooting, changelog), `bugs` URL in module.json — DONE, tested by user.
 
+## 1.0.0
+- Module id renamed + migration (above), version 1.0.0, README screenshot (`docs/picker.png`,
+  user-provided, generic test art), upgrade notes, GIF-paste note, "Listing on Foundry's
+  package directory" maintainer section, `readme`/`changelog` URLs in module.json. No `media`
+  entry: the v14 docs only document type `setup` (setup-screen background), so images go on
+  the Foundry package admin page instead. Awaiting user test + package submission (the user
+  must submit the form; needs a Foundry license owner).
+- Listing per release: admin page needs the RELEASE-SPECIFIC manifest URL
+  (`…/releases/download/vX.Y.Z/module.json`), notes URL, compatibility min 14 / verified 14.367.
+  Optional future: automate via the Package Release API (`fvttp_` token as a GitHub secret).
+
 ## Stretch goals
 - 0.7.0: upload via drag-and-drop, Upload button and paste; MIT license; author name
   "Crescens" everywhere — released; upload button, drag-and-drop and no-overwrite tested OK,
-  paste failed → 0.7.1 fix awaiting user test (remaining 0.7.0 test steps 5–10 too).
-- Later / lower priority (user's call): keyboard navigation, double-click to confirm, updating
-  tokens on all scenes. Going to 1.0.0 is the user's decision.
+  paste failed → 0.7.1 fix — DONE, tested by user (pasting a GIF yields a still PNG of the
+  first frame; user accepted, documented).
+- Proposed for 1.1.0 (user to choose): token right-click (Token HUD) button to open the
+  picker, a "recent images" row per actor, double-click to confirm. Also suggested: larger
+  preview, thumbnail size control, "new folder" button. Lower priority: keyboard navigation,
+  updating tokens on all scenes. Advised against: delete/rename from the picker; restricting
+  players to their own folder (cosmetic only, implies false security).
 
 ## Testing approach
 - Manual testing in Foundry by the user (GM and a Trusted Player) after every phase.
