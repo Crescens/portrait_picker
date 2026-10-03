@@ -29,8 +29,7 @@
   </header>
 
   {{!-- Grid of folders first, then images --}}
-  {{!-- tabindex="0" lets the grid hold the keyboard focus, so Ctrl+V pastes here. --}}
-  <section class="portrait-picker-grid" tabindex="0">
+  <section class="portrait-picker-grid">
     {{#each folders}}
     <button type="button" class="portrait-picker-tile folder" data-action="openFolder"
             data-path="{{path}}" data-search-name="{{searchName}}">

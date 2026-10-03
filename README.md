@@ -136,7 +136,7 @@ assets/
 | "you don't have the Use File Browser permission" | Give the player's role the **Use File Browser** permission in **Game Settings → Configure Permissions**. |
 | No **Upload** button, or "you don't have the Upload New Files permission" | The player's role lacks **Upload New Files**. See [Permissions](#permissions) before granting it. |
 | "couldn't upload …" | The file may be larger than your server or host allows, or the connection dropped. Check the console (F12) for details. |
-| Pasting does nothing | Click inside the picker window first so it has focus, and make sure an image (not text or a file link) was copied. |
+| Pasting does nothing | Click inside the picker window first so it has focus (the filter box is focused when the picker opens), and make sure an image was copied. With **Debug logging** on, the console shows what the clipboard held. |
 | Clicking the portrait opens Foundry's normal file picker | Shift was held, **Use Portrait Picker on my sheets** is off, or it's an **unlinked** token's sheet (those always use the standard picker). |
 | A token on the scene didn't change | It's unlinked, it's on a different scene from the one you're viewing, or you don't have permission to change it (you'll see a yellow message). |
 | The ring shows a different picture than the one chosen | The token's ring has its own **Subject Texture** set, which Foundry shows instead. Clear it in the token's settings. |
@@ -159,6 +159,8 @@ assets/
 modules, as long as the copyright notice is kept.
 
 ## Changelog
+- **0.7.1**: Fix pasting images with Ctrl+V. Foundry's own Ctrl+V shortcut was taking the
+  keypress before the picker saw it.
 - **0.7.0**: Add images from your computer by drag-and-drop, an Upload button or paste
   (Ctrl+V), with no overwriting of existing files. New Permissions section. MIT license.
 - **0.6.0**: Polish. The picker notes when there's no linked token on the scene. README gains
@@ -177,9 +179,9 @@ Releases are built automatically by a GitHub Actions workflow
 1. Make sure the code you want to release is on the branch you'll release from (normally
    `main`).
 2. On GitHub, open the repository → **Releases** → **Draft a new release**.
-3. **Choose a tag** → type a new tag like `v0.7.0` → **Create new tag on publish**. Set
+3. **Choose a tag** → type a new tag like `v0.7.1` → **Create new tag on publish**. Set
    **Target** to the branch from step 1.
-4. Give it a title (e.g. `v0.7.0`) and a short description of what changed.
+4. Give it a title (e.g. `v0.7.1`) and a short description of what changed.
 5. Leave **Set as a pre-release** unticked (Foundry's manifest link only follows normal
    releases), then click **Publish release**.
 6. Open the repository's **Actions** tab: a **Release** run appears and should finish with a
@@ -188,5 +190,5 @@ Releases are built automatically by a GitHub Actions workflow
 7. In Foundry's setup screen → **Add-on Modules**, click **Check for Updates** (or install
    with the manifest URL the first time).
 
-The workflow takes the version from the tag (`v0.7.0` → `0.7.0`) and writes it, plus the
+The workflow takes the version from the tag (`v0.7.1` → `0.7.1`) and writes it, plus the
 correct download link, into the released `module.json`, so the tag is what counts.
